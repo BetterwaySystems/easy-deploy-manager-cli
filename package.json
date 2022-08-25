@@ -1,0 +1,45 @@
+{
+  "name": "easy-deploy-manager-cli",
+  "version": "0.0.1",
+  "description": "Easy way to deploy, scale, management, monitoring and run javascript framework applicaions.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && chmod +x lib/index.js",
+    "start": "npm run build && lib/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BetterwaySystems/easy-deploy-manager-cli.git"
+  },
+  "keywords": [
+    "deploy",
+    "deployment",
+    "nest",
+    "nestjs",
+    "next",
+    "nextjs",
+    "pm2",
+    "nvm",
+    "nodejs",
+    "monitoring",
+    "cli",
+    "cli-tool"
+  ],
+  "author": "BetterwaySystems",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BetterwaySystems/easy-deploy-manager-cli/issues"
+  },
+  "homepage": "https://github.com/BetterwaySystems/easy-deploy-manager-cli#readme",
+  "dependencies": {
+    "ink": "^3.2.0",
+    "meow": "^9.0.0",
+    "react": "^17.0.2",
+    "ssh2": "^1.11.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.17",
+    "typescript": "^4.7.4"
+  }
+}
