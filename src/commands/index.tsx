@@ -1,4 +1,4 @@
-import Build from './Build'
+import Bundle from './Bundle'
 import Deploy from './Deploy'
 import Init from './Init'
 import Revert from './Revert'
@@ -8,7 +8,7 @@ import Status from './Status'
 import Stop from './Stop'
 
 export default {
-  Build,
+  Bundle,
   Deploy,
   Init,
   Revert,

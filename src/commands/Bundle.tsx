@@ -1,8 +1,8 @@
 import React from 'react';
 
-const Build = ( props : any)=>{
+const Bundle = ( props : any)=>{
   console.log(props);
 	return (<></>)
 }
 
-export default Build;
+export default Bundle;

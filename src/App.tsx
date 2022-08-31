@@ -2,7 +2,7 @@ import React from 'react';
 import { Text} from 'ink';
 import commands from './commands'
 
-type Tcommand = 'build'| 'deploy'| 'init'| 'revert'| 'scale'| 'start'| 'status'| 'stop' | string
+type Tcommand = 'bundle'| 'deploy'| 'init'| 'revert'| 'scale'| 'start'| 'status'| 'stop' | string
 
 interface IAppProps {
   command : Tcommand | undefined
