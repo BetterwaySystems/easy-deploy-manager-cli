@@ -1,0 +1,7 @@
+{
+  "framework": "nest",
+  "packageManager": "npm",
+  "appLocation": "",
+  "nodeVersion": "",
+  "server": { "host": "", "port": "", "username": "ec2-user", "deploymentDir": "/home/ec2-user", "nodeVersion": "" }
+}
