@@ -42,7 +42,6 @@ SSH.prototype.exec = function(command: string){
   return new Promise((resolve, reject)=>{
 
     const self = this;
-    console.log(self._client.exec, command);
     self._client.exec(command, onExec);
 
     function onExec(err : Error, stream: any) {
@@ -91,7 +90,7 @@ SSH.prototype.exists = function(path: string) {
         if (type) {
           resolve(type);
         } else {
-          reject(false);
+          resolve(false);
         }
       }
     });
@@ -103,47 +102,33 @@ SSH.prototype.mkdir = function(path: string){
 
   const self = this;
 
-  function doMkdir(path : string){
-    return new Promise((res, rej) => {
-      self._sftp.mkdir(path, (err: Error) => {
+  let doMkdir = (p:string) => {
+    return new Promise((resolve, reject) => {
+      self._sftp.mkdir(p, (err: Error) => {
         if (err) {
-          rej(new Error(`Failed to create directory ${path}: ${err.message}`));
+          reject(new Error(`Failed to create directory ${p}: ${err.message}`));
         }
-        res(`${path} directory created`);
+        resolve(`${p} directory created`);
       });
-      return undefined;
     });
   };
 
-  async function mkdir(path : string){
-    
-    let {dir} = parse(path);
+  let mkdir = (p:string) => {
+    let {dir} = parse(p);
     if(dir === '' || dir === '/' || dir === '.'){
-      return undefined;
+      return;
     }
-
-    try {
-      let type = self._sftp.exists(dir);
-      return console.log(dir, type);
-      // if (!type) mkdir(dir)
-    }catch (e){
-      return 'catch'
-    }
-    // return 
-    //   .then( (type : any) => {
-    //     if (!type) {
-    //       return mkdir(dir);
-    //     }
-    //   })
-    //   .then(() => {
-    //     return doMkdir(path);
-    //   });
-  }
-
-  return new Promise(async (resolve)=>{
-    let result = await mkdir(path);
-    resolve(result);
-  });
+    return self.exists(dir)
+      .then((type:boolean) => {
+        if (!type) {
+          return mkdir(dir);
+        }
+      })
+      .then(() => {
+        return doMkdir(p);
+      });
+  };
+  return mkdir(path);
 }
 
 interface IPutFileOptions {
@@ -151,35 +136,29 @@ interface IPutFileOptions {
 }
 
 SSH.prototype.putFile = function(path : string, dest :string, options : IPutFileOptions = {}) {
-  return new Promise((resolve, reject)=>{
+  return new Promise(async (resolve)=>{
     
     const self = this;
-    
-    self._client.sftp(onSftp);
-  
-    function onSftp(err:Error, sftp:any) {
-      if(err) {
-        reject(err);
-      } else {
-        var totalTransfered = 0;
-        var fastPutOptions = {
-          step: sendProgressInfo
-        };
+    let totalTransfered = 0;
 
-        self.mkdir(dest);
-
-        if (sftp && dest){}
-        resolve(path)
-      }
-  
-      function sendProgressInfo(_tt : any, chunk : any, total : any) {
-        totalTransfered += chunk;
-        if(options.onProgress) {
-          var completedPercentage = (totalTransfered/total) * 100;
-          options.onProgress(completedPercentage, totalTransfered, total);
-        }
+    function sendProgressInfo(_tt : any, chunk : any, total : any) {
+      totalTransfered += chunk;
+      let completedPercentage = (totalTransfered/total) * 100;
+      if(options.onProgress) {
+        options.onProgress(completedPercentage, totalTransfered, total);
       }
     }
+
+    let fastPutOptions = {
+      step: sendProgressInfo
+    };
+
+    const {dir} = parse(dest)
+    await self.mkdir(dir);
+    
+    self._sftp.fastPut(path, dest, fastPutOptions, ()=>{
+      resolve(true)
+    })
 
   })
 }
