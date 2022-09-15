@@ -173,11 +173,7 @@ interface IUpload {
 const upload = async ({path, title, dest} : IUpload)=> {
 
   // 테스트를 위한 코드
-  let sshConfig = {
-    host: '172.20.1.23',
-    username: 'u1',
-    password: 'hiswill4874',
-  }
+  let sshConfig = {}
 
   const client : ISSH = await new (SSH as any)(sshConfig);
 
