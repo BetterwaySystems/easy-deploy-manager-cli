@@ -8,15 +8,46 @@ interface IInitTextInputProps {
   rangeNum: number;
   step: number;
   defaultValue?: string;
-  result: { [key: string]: string | { [key: string]: string } };
+  result: Record<string, any>;
   setStep: (step: number) => void;
-  setResult: (result: { [key: string]: string | { [key: string]: string } }) => void;
+  setResult: (result: Record<string, any>) => void;
+}
+
+interface IInitKeyInfoForSetValue {
+  index: number;
+  oneDepth: string | undefined;
+  twoDepth: string | undefined;
 }
 
 const InitTextInput = (props: IInitTextInputProps) => {
   const { target, label, rangeNum, step, defaultValue, result, setStep, setResult } = props;
-  const onSubmit = (key: string, value: string) => {
-    if (value) setResult({ ...result, [key]: value });
+  const splitTarget = target.split('.');
+
+  const recursiveForAssignValue = (
+    targetObject: Record<string, any>,
+    { index, oneDepth, twoDepth }: IInitKeyInfoForSetValue,
+    value: string
+  ) => {
+    if (!twoDepth) targetObject[`${oneDepth}`] = value;
+    else {
+      index += 1;
+      recursiveForAssignValue(
+        targetObject[`${oneDepth}`],
+        { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] },
+        value
+      );
+    }
+  };
+
+  const setInputValue = (value: string) => {
+    if (value) {
+      let index = 0;
+      const keyInfo = { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] };
+      const copyInitValueForDeploy = JSON.parse(JSON.stringify(result));
+
+      recursiveForAssignValue(copyInitValueForDeploy, keyInfo, value);
+      setResult(copyInitValueForDeploy);
+    }
     setStep(step + 1);
   };
 
@@ -29,10 +60,7 @@ const InitTextInput = (props: IInitTextInputProps) => {
               <Text color="green">?</Text> {label}: {defaultValue ? <Text color="gray">({defaultValue})</Text> : ''}
             </Text>
           </Box>
-          <UncontrolledTextInput
-            onSubmit={(value: string) => onSubmit(target, value)}
-            focus={step > rangeNum + 1 ? false : true}
-          />
+          <UncontrolledTextInput onSubmit={setInputValue} focus={step > rangeNum + 1 ? false : true} />
         </Box>
       ) : null}
     </Box>

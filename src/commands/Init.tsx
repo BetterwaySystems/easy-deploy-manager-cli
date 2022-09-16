@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, Box, useApp, Newline } from 'ink';
+import { Text, Box, Newline } from 'ink';
 import fs from 'fs';
 import { InitDescription, InitSelectInput, InitTextInput } from '../components';
 
@@ -41,22 +41,20 @@ interface ISelectOption {
 // npm start -- init --type nextjs
 // props: IInitProps
 const Init = () => {
-  const { exit } = useApp();
-
   const [step, setStep] = useState<number>(0);
-  const [result, setResult] = useState<{ [key: string]: string | { [key: string]: string } }>({
+  const [result, setResult] = useState<Record<string, any>>({
     framework: '',
     packageManager: '',
     appLocation: '',
     nodeVersion: '',
-    serverHost: '',
-    serverPort: '',
-    serverUsername: 'ec2-user',
-    serverDeploymentDir: '/home/ec2-user',
-    serverNodeVersion: '',
-    // exec_mode: '',
-    // instance: '',
-    severPem: '',
+    server: {
+      host: '',
+      port: '',
+      username: 'ec2-user',
+      deploymentDir: '/home/ec2-user',
+      nodeVersion: '',
+      pem: '',
+    },
   });
 
   const frameworkList = [
@@ -113,75 +111,47 @@ const Init = () => {
     },
     {
       type: 'textInput',
-      target: 'serverHost',
+      target: 'server.host',
       label: '(server) host',
       rangeNum: 3,
     },
     {
       type: 'textInput',
-      target: 'serverPort',
+      target: 'server.port',
       label: '(server) port',
       rangeNum: 4,
     },
     {
       type: 'textInput',
-      target: 'serverUsername',
+      target: 'server.username',
       label: '(server) username',
       defaultValue: 'ec2-user',
       rangeNum: 5,
     },
     {
       type: 'textInput',
-      target: 'serverDeploymentDir',
+      target: 'server.deploymentDir',
       label: '(server) deploymentDir',
       defaultValue: '/home/ec2-user',
       rangeNum: 6,
     },
     {
       type: 'textInput',
-      target: 'serverNodeVersion',
+      target: 'server.nodeVersion',
       label: '(server) nodeVersion',
       rangeNum: 7,
     },
     {
       type: 'textInput',
-      target: 'serverPem',
+      target: 'server.pem',
       label: '(server) pem',
       rangeNum: 8,
     },
   ];
 
   if (step > 9) {
-    const {
-      framework,
-      packageManager,
-      appLocation,
-      nodeVersion,
-      serverHost,
-      serverPort,
-      serverUsername,
-      serverDeploymentDir,
-      serverNodeVersion,
-      serverPem,
-    } = result;
-
-    const dataForDeploy = {
-      framework,
-      packageManager,
-      appLocation,
-      nodeVersion,
-      server: {
-        host: serverHost,
-        port: serverPort,
-        username: serverUsername,
-        deploymentDir: serverDeploymentDir,
-        nodeVersion: serverNodeVersion,
-        pem: serverPem,
-      },
-    };
-
     // easy-deploy.json 파일 생성
-    fs.writeFileSync('easy-deploy.json', JSON.stringify(dataForDeploy));
+    fs.writeFileSync('easy-deploy.json', JSON.stringify(result));
   }
 
   return (
