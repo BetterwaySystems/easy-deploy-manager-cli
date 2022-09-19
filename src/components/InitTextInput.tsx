@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, Box } from 'ink';
 import { UncontrolledTextInput } from 'ink-text-input';
+import { IDefaultDeployInfo } from '../commands/Init';
 
 interface IInitTextInputProps {
   target: string;
@@ -8,9 +9,9 @@ interface IInitTextInputProps {
   rangeNum: number;
   step: number;
   defaultValue?: string;
-  result: Record<string, any>;
+  result: IDefaultDeployInfo;
   setStep: (step: number) => void;
-  setResult: (result: Record<string, any>) => void;
+  setResult: (result: IDefaultDeployInfo) => void;
 }
 
 interface IInitKeyInfoForSetValue {
@@ -23,19 +24,11 @@ const InitTextInput = (props: IInitTextInputProps) => {
   const { target, label, rangeNum, step, defaultValue, result, setStep, setResult } = props;
   const splitTarget = target.split('.');
 
-  const recursiveForAssignValue = (
-    targetObject: Record<string, any>,
-    { index, oneDepth, twoDepth }: IInitKeyInfoForSetValue,
-    value: string
-  ) => {
+  const recursiveForAssignValue = (targetObject: Record<string, any>, { index, oneDepth, twoDepth }: IInitKeyInfoForSetValue, value: string) => {
     if (!twoDepth) targetObject[`${oneDepth}`] = value;
     else {
       index += 1;
-      recursiveForAssignValue(
-        targetObject[`${oneDepth}`],
-        { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] },
-        value
-      );
+      recursiveForAssignValue(targetObject[`${oneDepth}`], { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] }, value);
     }
   };
 

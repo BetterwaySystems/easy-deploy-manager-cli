@@ -1,15 +1,15 @@
 {
   "framework": "nest",
   "packageManager": "npm",
-  "appLocation": "1",
-  "nodeVersion": "1",
+  "appLocation": "",
+  "nodeVersion": "",
   "server": {
-    "host": "1",
-    "port": "1",
-    "username": "1",
-    "deploymentDir": "1",
-    "nodeVersion": "1",
-    "pem": "",
-    "water": { "test": "1" }
+    "host": "",
+    "port": "",
+    "username": "ec2-user",
+    "password": "",
+    "deploymentDir": "/home/ec2-user",
+    "nodeVersion": "",
+    "pemLocation": ""
   }
 }

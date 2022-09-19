@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, Box, Newline } from 'ink';
+import { Text, Box } from 'ink';
 import SelectInput from 'ink-select-input';
 import { ISelectOption } from '../commands/Init';
 import { IInitTextInputProps } from './InitTextInput';
@@ -27,7 +27,7 @@ const InitSelectInput = (props: IInitSelectInputProps) => {
           </Box>
           <SelectInput
             items={itemList}
-            onSelect={(item) => selectOption(target, item)}
+            onSelect={(item: ISelectOption) => selectOption(target, item)}
             isFocused={step > rangeNum + 1 ? false : true}
           />
         </Box>
