@@ -14,6 +14,11 @@ const Bundle = (props: any) => {
   const testInitFileDir = `${process.cwd()}/ed-manager.json`;
   const config = JSON.parse(fs.readFileSync(testInitFileDir, "utf-8"));
 
+  const defaultOutputPath = `${process.cwd()}/ed-output`;
+  config.output = props.output || props.o || defaultOutputPath;
+
+  console.log("config.output", config.output);
+
   const builder: IBuilder = Builder(config);
   console.log("builder", builder);
 
