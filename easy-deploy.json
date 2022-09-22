@@ -1,15 +1,1 @@
-{
-  "framework": "nest",
-  "packageManager": "npm",
-  "appLocation": "",
-  "nodeVersion": "",
-  "server": {
-    "host": "",
-    "port": "",
-    "username": "ec2-user",
-    "password": "",
-    "deploymentDir": "/home/ec2-user",
-    "nodeVersion": "",
-    "pemLocation": ""
-  }
-}
+{"buildType":"next","packageManager":"npm","appLocation":"","nodeVersion":"","server":[{"host":"","port":0,"username":"ec2-user","password":"","deploymentDir":"/home/ec2-user","nodeVersion":"","pemLocation":""}],"pm2":{"appName":""},"env":{}}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, Box } from 'ink';
 import { UncontrolledTextInput } from 'ink-text-input';
-import { IDefaultDeployInfo } from '../commands/Init';
+import { IDefaultInitInfo } from '../commands/Init';
 
 interface IInitTextInputProps {
   target: string;
@@ -9,9 +9,9 @@ interface IInitTextInputProps {
   rangeNum: number;
   step: number;
   defaultValue?: string;
-  defaultInitInfo: IDefaultDeployInfo;
+  defaultInitInfo: IDefaultInitInfo;
   setStep: (step: number) => void;
-  setDefaultInitInfo: (defaultInitInfo: IDefaultDeployInfo) => void;
+  setDefaultInitInfo: (defaultInitInfo: IDefaultInitInfo) => void;
 }
 
 interface IInitKeyInfoForSetValue {

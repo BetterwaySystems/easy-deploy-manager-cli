@@ -32,7 +32,7 @@ interface IDefaultDeployPM2Info {
   // exec_mode: string;
   // instance: string;
 }
-interface IDefaultDeployInfo {
+interface IDefaultInitInfo {
   buildType: 'next' | 'nest' | string;
   packageManager: 'npm' | 'yarn' | 'pnmp' | string;
   appLocation: string;
@@ -148,7 +148,7 @@ const initInfoList: Array<IInitSettingForComponent> = [
 
 const Init = () => {
   const [step, setStep] = useState<number>(0);
-  const [defaultInitInfo, setDefaultInitInfo] = useState<IDefaultDeployInfo>({
+  const [defaultInitInfo, setDefaultInitInfo] = useState<IDefaultInitInfo>({
     buildType: '',
     packageManager: '',
     appLocation: '',
@@ -257,4 +257,4 @@ const Init = () => {
 };
 
 export default Init;
-export { ISelectOption, IDefaultDeployInfo };
+export { ISelectOption, IDefaultInitInfo };
