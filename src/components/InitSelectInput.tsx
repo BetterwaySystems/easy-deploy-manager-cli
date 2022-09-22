@@ -9,10 +9,10 @@ interface IInitSelectInputProps extends IInitTextInputProps {
 }
 
 const InitSelectInput = (props: IInitSelectInputProps) => {
-  const { target, label, rangeNum, itemList, step, result, setStep, setResult } = props;
+  const { target, label, rangeNum, itemList, step, defaultInitInfo, setStep, setDefaultInitInfo } = props;
 
   const selectOption = (key: string, item: ISelectOption) => {
-    if (item.value) setResult({ ...result, [key]: item.value });
+    if (item.value) setDefaultInitInfo({ ...defaultInitInfo, [key]: item.value });
     setStep(step + 1);
   };
 

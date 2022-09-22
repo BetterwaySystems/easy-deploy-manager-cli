@@ -9,9 +9,9 @@ interface IInitTextInputProps {
   rangeNum: number;
   step: number;
   defaultValue?: string;
-  result: IDefaultDeployInfo;
+  defaultInitInfo: IDefaultDeployInfo;
   setStep: (step: number) => void;
-  setResult: (result: IDefaultDeployInfo) => void;
+  setDefaultInitInfo: (defaultInitInfo: IDefaultDeployInfo) => void;
 }
 
 interface IInitKeyInfoForSetValue {
@@ -21,14 +21,22 @@ interface IInitKeyInfoForSetValue {
 }
 
 const InitTextInput = (props: IInitTextInputProps) => {
-  const { target, label, rangeNum, step, defaultValue, result, setStep, setResult } = props;
+  const { target, label, rangeNum, step, defaultValue, defaultInitInfo, setStep, setDefaultInitInfo } = props;
   const splitTarget = target.split('.');
 
-  const recursiveForAssignValue = (targetObject: Record<string, any>, { index, oneDepth, twoDepth }: IInitKeyInfoForSetValue, value: string) => {
+  const recursiveForAssignValue = (
+    targetObject: Record<string, any>,
+    { index, oneDepth, twoDepth }: IInitKeyInfoForSetValue,
+    value: string
+  ) => {
     if (!twoDepth) targetObject[`${oneDepth}`] = value;
     else {
       index += 1;
-      recursiveForAssignValue(targetObject[`${oneDepth}`], { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] }, value);
+      recursiveForAssignValue(
+        targetObject[`${oneDepth}`],
+        { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] },
+        value
+      );
     }
   };
 
@@ -36,10 +44,10 @@ const InitTextInput = (props: IInitTextInputProps) => {
     if (value) {
       let index = 0;
       const keyInfo = { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] };
-      const copyInitValueForDeploy = JSON.parse(JSON.stringify(result));
+      const copyInitValueForDeploy = JSON.parse(JSON.stringify(defaultInitInfo));
 
       recursiveForAssignValue(copyInitValueForDeploy, keyInfo, value);
-      setResult(copyInitValueForDeploy);
+      setDefaultInitInfo(copyInitValueForDeploy);
     }
     setStep(step + 1);
   };

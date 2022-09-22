@@ -5,24 +5,6 @@ import dedent from 'dedent';
 import fs from 'fs';
 import { InitDescription, InitSelectInput, InitTextInput } from '../components';
 
-/**
- * 배포하기 위해 필요한 것들
- * 1. framework : nest | next
- * 2. packageManager : npm | yarn | yarnBerry
- * 3. appLocation : /Users/parkhyemin/projects/Red-Platform-RestApi
- * 4. nodeVersion : 16.4.0
- * 5. server
- *  - host : 3.38.77.69
- *  - port : 3000
- *  - username : ec2-user
- *  - password: 비밀번호
- *  - deploymentDir : /home/ec2-user
- *  - nodeVersion : 16.4.0
- *  - exec_mode : fork_mode
- *  - instance : 1
- *  - pemLocation : pem 파일 위치
- */
-
 interface ISelectOption {
   label: string;
   value: string;
@@ -35,7 +17,6 @@ interface IInitSettingForComponent {
   defaultValue?: string;
   itemList?: Array<ISelectOption>;
 }
-
 interface IDefaultDeployServerInfo {
   host: string;
   port: string;
@@ -45,19 +26,130 @@ interface IDefaultDeployServerInfo {
   nodeVersion: string;
   pemLocation: string;
 }
+interface IDefaultDeployPM2Info {
+  appName: string;
+  // script: string;
+  // exec_mode: string;
+  // instance: string;
+}
 interface IDefaultDeployInfo {
-  framework: string;
-  packageManager: string;
+  buildType: 'next' | 'nest' | string;
+  packageManager: 'npm' | 'yarn' | 'pnmp' | string;
   appLocation: string;
   nodeVersion: string;
   server: IDefaultDeployServerInfo;
+  pm2: IDefaultDeployPM2Info;
+  env: Record<string, any>;
 }
 
-// npm start -- init --type nextjs
+const frameworkList = [
+  {
+    label: 'next',
+    value: 'next',
+  },
+  {
+    label: 'nest',
+    value: 'nest',
+  },
+];
+const packageManagerList = [
+  {
+    label: 'npm',
+    value: 'npm',
+  },
+  {
+    label: 'yarn',
+    value: 'yarn',
+  },
+  {
+    label: 'pnpm',
+    value: 'pnpm',
+  },
+];
+
+const initInfoList: Array<IInitSettingForComponent> = [
+  {
+    type: 'selectInput',
+    target: 'buildType',
+    label: 'buildType',
+    rangeNum: -1,
+    itemList: frameworkList,
+  },
+  {
+    type: 'selectInput',
+    target: 'packageManager',
+    label: 'packageManager',
+    rangeNum: 0,
+    itemList: packageManagerList,
+  },
+  {
+    type: 'textInput',
+    target: 'appLocation',
+    label: 'appLocation',
+    rangeNum: 1,
+  },
+  {
+    type: 'textInput',
+    target: 'nodeVersion',
+    label: 'nodeVersion',
+    rangeNum: 2,
+  },
+  {
+    type: 'textInput',
+    target: 'server.host',
+    label: '(server) host',
+    rangeNum: 3,
+  },
+  {
+    type: 'textInput',
+    target: 'server.port',
+    label: '(server) port',
+    rangeNum: 4,
+  },
+  {
+    type: 'textInput',
+    target: 'server.username',
+    label: '(server) username',
+    defaultValue: 'ec2-user',
+    rangeNum: 5,
+  },
+  {
+    type: 'textInput',
+    target: 'server.password',
+    label: '(server) password',
+    rangeNum: 6,
+  },
+  {
+    type: 'textInput',
+    target: 'server.deploymentDir',
+    label: '(server) deploymentDir',
+    defaultValue: '/home/ec2-user',
+    rangeNum: 7,
+  },
+  {
+    type: 'textInput',
+    target: 'server.nodeVersion',
+    label: '(server) nodeVersion',
+    rangeNum: 8,
+  },
+  {
+    type: 'textInput',
+    target: 'server.pemLocation',
+    label: '(server) pemLocation',
+    rangeNum: 9,
+  },
+  {
+    type: 'textInput',
+    target: 'pm2.appName',
+    label: '(pm2) appName',
+    rangeNum: 10,
+  },
+];
+
 const Init = () => {
   const [step, setStep] = useState<number>(0);
-  const [result, setResult] = useState<IDefaultDeployInfo>({
-    framework: '',
+  const [defaultInitInfo, setDefaultInitInfo] = useState<IDefaultDeployInfo>({
+    buildType: '',
     packageManager: '',
     appLocation: '',
     nodeVersion: '',
@@ -70,126 +162,48 @@ const Init = () => {
       nodeVersion: '',
       pemLocation: '',
     },
+    pm2: {
+      appName: '',
+    },
+    env: {},
   });
 
-  const frameworkList = [
-    {
-      label: 'nest',
-      value: 'nest',
-    },
-    {
-      label: 'next',
-      value: 'next',
-    },
-  ];
-  const packageManagerList = [
-    {
-      label: 'npm',
-      value: 'npm',
-    },
-    {
-      label: 'yarn',
-      value: 'yarn',
-    },
-    {
-      label: 'yarnBerry',
-      value: 'yarnBerry',
-    },
-  ];
-
-  const initInfoList: Array<IInitSettingForComponent> = [
-    {
-      type: 'selectInput',
-      target: 'framework',
-      label: 'framework',
-      rangeNum: -1,
-      itemList: frameworkList,
-    },
-    {
-      type: 'selectInput',
-      target: 'packageManager',
-      label: 'packageManager',
-      rangeNum: 0,
-      itemList: packageManagerList,
-    },
-    {
-      type: 'textInput',
-      target: 'appLocation',
-      label: 'appLocation',
-      rangeNum: 1,
-    },
-    {
-      type: 'textInput',
-      target: 'nodeVersion',
-      label: 'nodeVersion',
-      rangeNum: 2,
-    },
-    {
-      type: 'textInput',
-      target: 'server.host',
-      label: '(server) host',
-      rangeNum: 3,
-    },
-    {
-      type: 'textInput',
-      target: 'server.port',
-      label: '(server) port',
-      rangeNum: 4,
-    },
-    {
-      type: 'textInput',
-      target: 'server.username',
-      label: '(server) username',
-      defaultValue: 'ec2-user',
-      rangeNum: 5,
-    },
-    {
-      type: 'textInput',
-      target: 'server.password',
-      label: '(server) password',
-      rangeNum: 6,
-    },
-    {
-      type: 'textInput',
-      target: 'server.deploymentDir',
-      label: '(server) deploymentDir',
-      defaultValue: '/home/ec2-user',
-      rangeNum: 7,
-    },
-    {
-      type: 'textInput',
-      target: 'server.nodeVersion',
-      label: '(server) nodeVersion',
-      rangeNum: 8,
-    },
-    {
-      type: 'textInput',
-      target: 'server.pemLocation',
-      label: '(server) pemLocation',
-      rangeNum: 9,
-    },
-  ];
-
   if (step > initInfoList.length - 1) {
+    const initializeFileInfo = {
+      ...defaultInitInfo,
+      server: [
+        {
+          ...defaultInitInfo.server,
+          port: Number(defaultInitInfo.server.port),
+        },
+      ],
+    };
+
     // easy-deploy.json 파일 생성
-    fs.writeFileSync('easy-deploy.json', JSON.stringify(result));
+    fs.writeFileSync('easy-deploy.json', JSON.stringify(initializeFileInfo));
   }
 
   const checkFinalJson = dedent`
     {
-      "framework": "${result.framework}",
-      "packageManager": "${result.packageManager}",
-      "appLocation": "${result.appLocation}",
-      "nodeVersion": "${result.nodeVersion}",
-      "server": {
-        "host": "${result.server.host}",
-        "port": "${result.server.port}",
-        "username": "${result.server.username}",
-        "password": "${result.server.password}",
-        "deploymentDir": "${result.server.deploymentDir}",
-        "nodeVersion": "${result.server.nodeVersion}",
-        "pemLocation": "${result.server.pemLocation}"
-      }
+      "buildType": "${defaultInitInfo.buildType}",
+      "packageManager": "${defaultInitInfo.packageManager}",
+      "appLocation": "${defaultInitInfo.appLocation}",
+      "nodeVersion": "${defaultInitInfo.nodeVersion}",
+      "server": [
+        {
+          "host": "${defaultInitInfo.server.host}",
+          "port": ${defaultInitInfo.server.port},
+          "username": "${defaultInitInfo.server.username}",
+          "password": "${defaultInitInfo.server.password}",
+          "deploymentDir": "${defaultInitInfo.server.deploymentDir}",
+          "nodeVersion": "${defaultInitInfo.server.nodeVersion}",
+          "pemLocation": "${defaultInitInfo.server.pemLocation}"
+        }
+      ],
+      "pm2": {
+        "appName": "${defaultInitInfo.pm2.appName}"
+      },
+      "env": {}
     }
   `;
 
@@ -206,9 +220,9 @@ const Init = () => {
               rangeNum={initInfo.rangeNum}
               itemList={initInfo.itemList}
               step={step}
-              result={result}
+              defaultInitInfo={defaultInitInfo}
               setStep={setStep}
-              setResult={setResult}
+              setDefaultInitInfo={setDefaultInitInfo}
             />
           ) : (
             <InitTextInput
@@ -218,9 +232,9 @@ const Init = () => {
               rangeNum={initInfo.rangeNum}
               defaultValue={initInfo.defaultValue}
               step={step}
-              result={result}
+              defaultInitInfo={defaultInitInfo}
               setStep={setStep}
-              setResult={setResult}
+              setDefaultInitInfo={setDefaultInitInfo}
             />
           )
         )}
@@ -229,7 +243,12 @@ const Init = () => {
           <Box flexDirection="column">
             <Markdown>{checkFinalJson}</Markdown>
             <Newline />
-            <Text>✨ About to write to easy-deploy.json </Text>
+            <Text>
+              ✨ About to write to{' '}
+              <Text color="#f2cd7c" bold>
+                easy-deploy.json
+              </Text>
+            </Text>
           </Box>
         ) : null}
       </Box>

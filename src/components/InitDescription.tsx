@@ -1,7 +1,17 @@
 import React from 'react';
 import { Text, Box, Newline } from 'ink';
+import Markdown from 'ink-markdown';
+import dedent from 'dedent';
 
 const InitDescription = () => {
+  const descriptionText = dedent`
+    🔆 This utility will make you through creating a \`easy-deploy.json\` file.
+    🔥 It only covers the most common items, and tries to guess sensible default.
+
+    (server) is designed to enable multi instance.
+    The value you input is the default value.
+  `;
+
   return (
     <Box flexDirection="column">
       <Box>
@@ -14,14 +24,8 @@ const InitDescription = () => {
       </Box>
       <Newline />
       <Box flexDirection="column">
-        <Text>
-          🔆 This utility will make you through creating a <Text color="orange">easy-deploy.json</Text> file.
-        </Text>
-        <Text>🔥 It only covers the most common items, and tries to guess sensible default.</Text>
-        {/* <Newline />
-        <Text>If you press enter, item is filled with default value.</Text> */}
+        <Markdown>{descriptionText}</Markdown>
         <Newline />
-        {/* <Text color="green">Welcome to Easy Deploy Manager CLI</Text> */}
       </Box>
     </Box>
   );
