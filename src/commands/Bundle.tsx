@@ -1,32 +1,59 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import cliSpinners from "cli-spinners";
 import fs from "fs";
+import { Text } from "ink";
 import Bundler from "../modules/bundler/index";
 import Builder from "../modules/builder/index";
 
 interface IBundler {
-  exec(): string;
+  exec(): any;
 }
 
-interface IBuilder {}
+interface IBuilder {
+  exec(): any;
+  validator(): any;
+}
 
 const Bundle = (props: any) => {
-  console.log("props", props);
+  // const [updateFrame, setUpdateFrame] = useState("");
+  // let timer;
+
+  useEffect(() => {
+    // const pointSpinner = cliSpinners.point;
+    // const { frames, interval } = pointSpinner;
+    // let i = 0;
+    // timer = setInterval(() => {
+    //   const dynamicFrameText =
+    //     frames[(i = ++i % frames.length)] + " - bundling - ";
+    //   console.log(dynamicFrameText);
+    // }, interval);
+  });
+
   const testInitFileDir = `${process.cwd()}/ed-manager.json`;
-  const config = JSON.parse(fs.readFileSync(testInitFileDir, "utf-8"));
+  const config: any = JSON.parse(fs.readFileSync(testInitFileDir, "utf-8"));
 
   const defaultOutputPath = `${process.cwd()}/ed-output`;
   config.output = props.output || props.o || defaultOutputPath;
 
-  console.log("config.output", config.output);
+  if (!fs.existsSync(defaultOutputPath)) {
+    fs.mkdirSync(defaultOutputPath);
+  }
 
   const builder: IBuilder = Builder(config);
-  console.log("builder", builder);
-
-  // deploy 연계 시 프로세스 다시 생성하는 여부에 따라 command로 리턴되도록 변경
   const bundler: IBundler = Bundler(config);
-  bundler.exec();
 
-  return <></>;
+  try {
+    builder.exec();
+    bundler.exec();
+  } catch (e: any) {
+    throw new Error(e);
+  }
+
+  return (
+    <>
+      <Text></Text>
+    </>
+  );
 };
 
 export default Bundle;

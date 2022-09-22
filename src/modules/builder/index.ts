@@ -17,9 +17,6 @@ function Builder(config: any): any {
   // validator.existBuildType();
   // validator.existAppLocaion();
 
-  console.log("config.buildType >>>>>>>", config.buildType);
-  console.log("Builders >>>", Builders.next);
-
   return Builders[config.buildType as TBuildType](config);
 }
 
