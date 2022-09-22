@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text} from 'ink';
-import commands from './commands'
+import commands from './commands';
+import modules from './modules';
 
 type Tcommand = 'bundle'| 'deploy'| 'init'| 'revert'| 'scale'| 'start'| 'status'| 'stop' | string
 
