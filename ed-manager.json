@@ -1,5 +1,5 @@
 {
-  "buildType": "next",
+  "buildType": "nest",
   "packageManager": "yarn",
   "appLocation": "/Users/poemormon/Work/00.Projects/00.NextJS/Red-Platform-WebApp",
   "nodeVersion": "16.4.0",

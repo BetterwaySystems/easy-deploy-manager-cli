@@ -1,12 +1,13 @@
 import React from 'react';
 import { Text} from 'ink';
-import commands from './commands'
+import commands from './commands';
+import modules from './modules';
 
 type Tcommand = 'bundle'| 'deploy'| 'init'| 'revert'| 'scale'| 'start'| 'status'| 'stop' | string
 
 interface IAppProps {
   command : Tcommand | undefined
-  options? : Record<string, unknown>
+  options? : Record<string, any>
 }
 
 function getCommand(command:string | undefined ){
@@ -15,6 +16,13 @@ function getCommand(command:string | undefined ){
 }
 
 const App = ({ command, options } : IAppProps)=>{
+
+  // For Module 테스트
+  if ( options?.['module'] ) {
+    if (command === 'upload') modules[command](options as any)
+    return <></>
+  }
+
 
   const cmd = getCommand(command);
 
