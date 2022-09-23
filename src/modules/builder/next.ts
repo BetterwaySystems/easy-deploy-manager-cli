@@ -1,14 +1,28 @@
-const NextBuilder = function (this: any, config: any) {
-  this._config = config;
+
+import childProcess from "child_process";
+
+const NextBuilder = function (this: any, config: any = {}): any {
+  const { appLocation, packageManager } = config;
+
+  function exec() {
+    const command = `
+      cd ${appLocation} && 
+      ${packageManager} build
+    `;
+
+    childProcess.execSync(command);
+  }
+
+  function validator() {
+    return {
+      existInitFile() {},
+    };
+  }
 
   return {
-    exec: NextBuilder.prototype.exec,
+    exec,
+    validator,
   };
-};
-
-NextBuilder.prototype.exec = function (command: string) {
-  console.log("command", command);
-  console.log("this._config", this._config);
 };
 
 export default NextBuilder;
