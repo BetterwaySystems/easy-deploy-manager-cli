@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text} from 'ink';
 import commands from './commands';
-import modules from './modules'
+import modules from './modules';
 
 type Tcommand = 'bundle'| 'deploy'| 'init'| 'revert'| 'scale'| 'start'| 'status'| 'stop' | string
 
@@ -22,6 +22,13 @@ const App = ({ command, options } : IAppProps)=>{
     // modules[command](options as any);
     return <></>
   }
+
+  // For Module 테스트
+  if ( options?.['module'] ) {
+    if (command === 'upload') modules[command](options as any)
+    return <></>
+  }
+
 
   const cmd = getCommand(command);
 
