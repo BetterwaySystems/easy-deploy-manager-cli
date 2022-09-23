@@ -16,6 +16,12 @@ function getCommand(command:string | undefined ){
 }
 
 const App = ({ command, options } : IAppProps)=>{
+  // For Module 테스트
+  if ( options?.['module'] ) {
+    if (command === 'connection') modules[command](options as any);
+    // modules[command](options as any);
+    return <></>
+  }
 
   // For Module 테스트
   if ( options?.['module'] ) {
@@ -40,7 +46,7 @@ const App = ({ command, options } : IAppProps)=>{
     </>
   )
 
-	return <Component {...options}/>
+  return <Component {...options}/>
 }
 
 export default App;
