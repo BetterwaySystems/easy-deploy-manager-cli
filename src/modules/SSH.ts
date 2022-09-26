@@ -20,8 +20,6 @@ interface IClient {
 }
 
 const SSH = function (this: any, configList: Array<ISSHConfig>) {
-  if (this._client != null) return this._client;
-
   return new Promise<ISSH>((resolve, reject) => {
     this._client = configList.map((config) => {
       const conn = new Client();
@@ -75,19 +73,21 @@ SSH.prototype.closeAllConnections = function () {
 };
 
 const connection = async ({ module }: { module: boolean }) => {
-  const configList: Array<ISSHConfig> = [
-    {
-      host: "13.125.105.220",
-      port: 22,
-      username: "ec2-user",
-      privateKey: readFileSync(
-        "/Users/a220403/Documents/Key/dev-platformteam-server-key.pem",
-      ),
-    },
-  ];
+  const initFile = `${process.cwd()}/easy-deploy.json`;
+  const config: any = JSON.parse(readFileSync(initFile, "utf-8"));
+
+  const sshConfig: Array<ISSHConfig> = config.server.map((s: any) => {
+    return {
+      host: s.host,
+      port: s.port,
+      username: s.username,
+      password: s.password,
+      privateKey: readFileSync(s.pemLocation),
+    };
+  });
 
   if (module) {
-    const client: ISSH = await new (SSH as any)(configList);
+    const client: ISSH = await new (SSH as any)(sshConfig);
 
     setTimeout(async () => {
       await client.closeAllConnections();
