@@ -3,7 +3,7 @@ import { Text, Box, Newline } from 'ink';
 import Markdown from 'ink-markdown';
 import dedent from 'dedent';
 import fs from 'fs';
-import { InitDescription, InitSelectInput, InitTextInput } from '../components';
+import { InitDescription, InitDefaultInputComponent } from '../components';
 
 interface ISelectOption {
   label: string;
@@ -18,24 +18,22 @@ interface IInitSettingForComponent {
   itemList?: Array<ISelectOption>;
 }
 interface IDefaultDeployServerInfo {
+  os: 'ubuntu' | 'amazonlinux' | 'centos' | string;
   host: string;
   port: string;
   username: string;
   password: string;
   deploymentDir: string;
-  nodeVersion: string;
   pemLocation: string;
 }
 interface IDefaultDeployPM2Info {
-  appName: string;
-  // script: string;
-  // exec_mode: string;
-  // instance: string;
+  exec_mode: 'fork' | 'cluster' | string;
+  instance: string;
 }
 interface IDefaultInitInfo {
   buildType: 'next' | 'nest' | string;
   packageManager: 'npm' | 'yarn' | 'pnmp' | string;
-  appLocation: string;
+  appName: string;
   nodeVersion: string;
   server: IDefaultDeployServerInfo;
   pm2: IDefaultDeployPM2Info;
@@ -66,8 +64,31 @@ const packageManagerList = [
     value: 'pnpm',
   },
 ];
-
-const initInfoList: Array<IInitSettingForComponent> = [
+const serverOSList = [
+  {
+    label: 'amazonlinux',
+    value: 'amazonlinux',
+  },
+  {
+    label: 'ubuntu',
+    value: 'ubuntu',
+  },
+  {
+    label: 'centos',
+    value: 'centos',
+  },
+];
+const pm2ExecModeList = [
+  {
+    label: 'fork',
+    value: 'fork',
+  },
+  {
+    label: 'cluster',
+    value: 'cluster',
+  },
+];
+const initSettingInfo: Array<IInitSettingForComponent> = [
   {
     type: 'selectInput',
     target: 'buildType',
@@ -84,8 +105,8 @@ const initInfoList: Array<IInitSettingForComponent> = [
   },
   {
     type: 'textInput',
-    target: 'appLocation',
-    label: 'appLocation',
+    target: 'appName',
+    label: 'appName',
     rangeNum: 1,
   },
   {
@@ -95,41 +116,44 @@ const initInfoList: Array<IInitSettingForComponent> = [
     rangeNum: 2,
   },
   {
+    type: 'selectInput',
+    target: 'server.os',
+    label: '(server) os',
+    defaultValue: 'amazonlinux',
+    itemList: serverOSList,
+    rangeNum: 3,
+  },
+  {
     type: 'textInput',
     target: 'server.host',
     label: '(server) host',
-    rangeNum: 3,
+    rangeNum: 4,
   },
   {
     type: 'textInput',
     target: 'server.port',
     label: '(server) port',
-    rangeNum: 4,
+    defaultValue: '22',
+    rangeNum: 5,
   },
   {
     type: 'textInput',
     target: 'server.username',
     label: '(server) username',
     defaultValue: 'ec2-user',
-    rangeNum: 5,
+    rangeNum: 6,
   },
   {
     type: 'textInput',
     target: 'server.password',
     label: '(server) password',
-    rangeNum: 6,
+    rangeNum: 7,
   },
   {
     type: 'textInput',
     target: 'server.deploymentDir',
     label: '(server) deploymentDir',
     defaultValue: '/home/ec2-user',
-    rangeNum: 7,
-  },
-  {
-    type: 'textInput',
-    target: 'server.nodeVersion',
-    label: '(server) nodeVersion',
     rangeNum: 8,
   },
   {
@@ -139,10 +163,19 @@ const initInfoList: Array<IInitSettingForComponent> = [
     rangeNum: 9,
   },
   {
-    type: 'textInput',
-    target: 'pm2.appName',
-    label: '(pm2) appName',
+    type: 'selectInput',
+    target: 'pm2.exec_mode',
+    label: '(pm2) exec_mode',
+    itemList: pm2ExecModeList,
+    defaultValue: 'fork',
     rangeNum: 10,
+  },
+  {
+    type: 'textInput',
+    target: 'pm2.instance',
+    label: '(pm2) instance',
+    defaultValue: '1',
+    rangeNum: 11,
   },
 ];
 
@@ -151,24 +184,25 @@ const Init = () => {
   const [defaultInitInfo, setDefaultInitInfo] = useState<IDefaultInitInfo>({
     buildType: '',
     packageManager: '',
-    appLocation: '',
-    nodeVersion: '',
+    appName: '',
+    nodeVersion: '(Enter the node version used in your project)',
     server: {
-      host: '',
-      port: '',
+      os: 'amazonlinux',
+      host: '(Enter the remote server host)',
+      port: '22',
       username: 'ec2-user',
-      password: '',
+      password: '(If you need a password to access the remote server, enter it)',
       deploymentDir: '/home/ec2-user',
-      nodeVersion: '',
-      pemLocation: '',
+      pemLocation: '(Enter the local path where the pem file is located)',
     },
     pm2: {
-      appName: '',
+      exec_mode: 'fork',
+      instance: '1',
     },
     env: {},
   });
 
-  if (step > initInfoList.length - 1) {
+  if (step > initSettingInfo.length - 1) {
     const initializeFileInfo = {
       ...defaultInitInfo,
       server: [
@@ -179,7 +213,7 @@ const Init = () => {
       ],
     };
 
-    // easy-deploy.json 파일 생성
+    // create easy-deploy.json
     fs.writeFileSync('easy-deploy.json', JSON.stringify(initializeFileInfo));
   }
 
@@ -187,21 +221,22 @@ const Init = () => {
     {
       "buildType": "${defaultInitInfo.buildType}",
       "packageManager": "${defaultInitInfo.packageManager}",
-      "appLocation": "${defaultInitInfo.appLocation}",
+      "appName": "${defaultInitInfo.appName}",
       "nodeVersion": "${defaultInitInfo.nodeVersion}",
       "server": [
         {
+          "os": "${defaultInitInfo.server.os}"
           "host": "${defaultInitInfo.server.host}",
           "port": ${defaultInitInfo.server.port},
           "username": "${defaultInitInfo.server.username}",
           "password": "${defaultInitInfo.server.password}",
           "deploymentDir": "${defaultInitInfo.server.deploymentDir}",
-          "nodeVersion": "${defaultInitInfo.server.nodeVersion}",
           "pemLocation": "${defaultInitInfo.server.pemLocation}"
         }
       ],
       "pm2": {
-        "appName": "${defaultInitInfo.pm2.appName}"
+        "exec_mode": "${defaultInitInfo.pm2.exec_mode}",
+        "instance": "${defaultInitInfo.pm2.instance}"
       },
       "env": {}
     }
@@ -211,35 +246,18 @@ const Init = () => {
     <Box flexDirection="column">
       <InitDescription />
       <Box flexDirection="column">
-        {initInfoList.map((initInfo: IInitSettingForComponent) =>
-          initInfo.type === 'selectInput' ? (
-            <InitSelectInput
-              key={initInfo.target}
-              target={initInfo.target}
-              label={initInfo.label}
-              rangeNum={initInfo.rangeNum}
-              itemList={initInfo.itemList}
-              step={step}
-              defaultInitInfo={defaultInitInfo}
-              setStep={setStep}
-              setDefaultInitInfo={setDefaultInitInfo}
-            />
-          ) : (
-            <InitTextInput
-              key={initInfo.target}
-              target={initInfo.target}
-              label={initInfo.label}
-              rangeNum={initInfo.rangeNum}
-              defaultValue={initInfo.defaultValue}
-              step={step}
-              defaultInitInfo={defaultInitInfo}
-              setStep={setStep}
-              setDefaultInitInfo={setDefaultInitInfo}
-            />
-          )
-        )}
+        {initSettingInfo.map((initSettingInfo: IInitSettingForComponent) => (
+          <InitDefaultInputComponent
+            key={initSettingInfo.target}
+            initSettingInfo={initSettingInfo}
+            step={step}
+            defaultInitInfo={defaultInitInfo}
+            setStep={setStep}
+            setDefaultInitInfo={setDefaultInitInfo}
+          />
+        ))}
         <Newline />
-        {step > initInfoList.length - 1 ? (
+        {step > initSettingInfo.length - 1 ? (
           <Box flexDirection="column">
             <Markdown>{checkFinalJson}</Markdown>
             <Newline />
@@ -257,4 +275,4 @@ const Init = () => {
 };
 
 export default Init;
-export { ISelectOption, IDefaultInitInfo };
+export { ISelectOption, IDefaultInitInfo, IInitSettingForComponent };
