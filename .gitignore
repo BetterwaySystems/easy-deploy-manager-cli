@@ -194,4 +194,4 @@ dist
 lib/
 
 # Init result files
-.easy-deploy.json
+./easy-deploy.json
