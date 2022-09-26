@@ -1,5 +1,4 @@
 import InitDescription from './InitDescription';
-import InitSelectInput from './InitSelectInput';
-import InitTextInput from './InitTextInput';
+import InitDefaultInputComponent from './InitDefaultInput';
 
-export { InitDescription, InitSelectInput, InitTextInput };
+export { InitDescription, InitDefaultInputComponent };
