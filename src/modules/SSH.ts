@@ -78,7 +78,7 @@ SSH.prototype.closeAllConnections = function () {
   );
 };
 
-const connection = async ({ module }: { module: boolean }) => {
+const getRemoteServerConnection = async ({ module }: { module: boolean }) => {
   const initFile = `${process.cwd()}/easy-deploy.json`;
   /**
    * TODO 
@@ -111,4 +111,4 @@ const connection = async ({ module }: { module: boolean }) => {
   }
 };
 
-export { SSH, connection };
+export { SSH, getRemoteServerConnection };
