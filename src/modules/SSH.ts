@@ -19,7 +19,12 @@ interface IClient {
   sftp: SFTPWrapper | null;
 }
 
+let _connectionPool : undefined | ISSH;
+
 const SSH = function (this: any, configList: Array<ISSHConfig>) {
+
+  if (_connectionPool) return _connectionPool;
+
   return new Promise<ISSH>((resolve, reject) => {
     this._client = configList.map((config) => {
       const conn = new Client();
@@ -60,6 +65,7 @@ const SSH = function (this: any, configList: Array<ISSHConfig>) {
       return tmpClient;
     });
 
+    _connectionPool = this;
     resolve(this);
   });
 };
@@ -74,6 +80,16 @@ SSH.prototype.closeAllConnections = function () {
 
 const connection = async ({ module }: { module: boolean }) => {
   const initFile = `${process.cwd()}/easy-deploy.json`;
+  /**
+   * TODO 
+   * 
+   * 예외처리 추가할것
+   * 
+   * 1. easy-deploy.json 파일이 없을 경우
+   * 2. easy-deploy.json 파일이 있지만 내용이 없을 경우
+   * 3. easy-deploy.json 파일이 있지만 내용이 잘못되었을 경우 ( JSON 포멧이 아닌 경우 )
+   * 
+   */
   const config: any = JSON.parse(readFileSync(initFile, "utf-8"));
 
   const sshConfig: Array<ISSHConfig> = config.server.map((s: any) => {
