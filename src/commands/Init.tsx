@@ -20,7 +20,7 @@ interface IInitSettingForComponent {
 interface IDefaultDeployServerInfo {
   os: 'ubuntu' | 'amazonlinux' | 'centos' | string;
   host: string;
-  port: string;
+  port: number;
   username: string;
   password: string;
   deploymentDir: string;
@@ -189,7 +189,7 @@ const Init = () => {
     server: {
       os: 'amazonlinux',
       host: '(Enter the remote server host)',
-      port: '22',
+      port: 22,
       username: 'ec2-user',
       password: '(If you need a password to access the remote server, enter it)',
       deploymentDir: '/home/ec2-user',
@@ -275,4 +275,4 @@ const Init = () => {
 };
 
 export default Init;
-export { ISelectOption, IDefaultInitInfo, IInitSettingForComponent };
+export { ISelectOption, IDefaultInitInfo, IInitSettingForComponent, IDefaultDeployServerInfo };

@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import { ISSH, SSH } from './upload';
+import { IDefaultDeployServerInfo } from '../commands/Init';
 
 interface ISSHConfig {
   host: string;
@@ -25,10 +26,10 @@ async function backup({ appName }: { appName: string }) {
 
   /**
    * Set SSH config for connecting remote server https://www.npmjs.com/package/ssh2
-   * @param {any} serverInfo - is remote server information
+   * @param {IDefaultDeployServerInfo} serverInfo - is remote server information
    * @returns sshConfig - consists of host, port, username, password, privateKey
    */
-  const setSSHConfig = (serverInfo: any) => {
+  const setSSHConfig = (serverInfo: IDefaultDeployServerInfo) => {
     const { host, port, username, password, pemLocation } = serverInfo;
     const sshConfig: ISSHConfig = { host, port, username };
     if (password) sshConfig.password = password;
@@ -39,9 +40,9 @@ async function backup({ appName }: { appName: string }) {
   /**
    * Generate backup folder for rollback at any time
    * @param {ISSH} client - is Client instance of ssh2 package
-   * @param {any} serverInfo - is remote server information
+   * @param {IDefaultDeployServerInfo} serverInfo - is remote server information
    */
-  const generateBackUpFolder = async (client: ISSH, serverInfo: any) => {
+  const generateBackUpFolder = async (client: ISSH, serverInfo: IDefaultDeployServerInfo) => {
     const { deploymentDir } = serverInfo;
     // check deploy file already is use & backup folder
     const { stdout: hasDeployFile } = await client.exec(`find ${deploymentDir}/${appName} -name ecosystem.config.js`);
