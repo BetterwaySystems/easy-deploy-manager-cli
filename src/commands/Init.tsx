@@ -179,6 +179,16 @@ const initSettingInfo: Array<IInitSettingForComponent> = [
   },
 ];
 
+/*
+======================================================================================
+
+                                  MODULE. BACKUP
+                                September 22, 2022
+
+Description : Use the CLI prompt to input the required values ​​that must be input init
+ially.
+======================================================================================
+*/
 const Init = () => {
   const [step, setStep] = useState<number>(0);
   const [defaultInitInfo, setDefaultInitInfo] = useState<IDefaultInitInfo>({
