@@ -1,4 +1,4 @@
-import { ISSH, SSH } from './upload'
+import { ISSH } from './upload'
 
 async function extractTarBall(){
 
@@ -8,9 +8,9 @@ async function extractTarBall(){
     password: 'hiswill4874',
   }
 
-  const client : ISSH = await new (SSH as any)(sshConfig);
+  // const client : ISSH = await new (SSH as any)(sshConfig);
 
-  await client.exec('cd /home/u1/uploadTest/ && tar -xvf file.tar', console.log)
+  // await client.exec('cd /home/u1/uploadTest/ && tar -xvf file.tar', console.log)
 }
 
 export {
