@@ -15,6 +15,7 @@ interface IBuilder {
 }
 
 const Bundle = (props: any) => {
+  // TODO 쓰기 및 참조 작업 전 항상 대상디렉토리가 존재하는지 확인 후 진행
   const testInitFileDir = `${process.cwd()}/easy-deploy.json`;
   /**
    * init 커맨드를 사용하여 생성 된 easy-deploy.json을 핸들링하기 위해 JSON형태 파싱
