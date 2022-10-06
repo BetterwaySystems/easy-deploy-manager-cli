@@ -1,9 +1,11 @@
-import { connection } from './SSH';
-import { installPM2 } from './installPM2';
-import { upload } from './upload';
+import { connection } from "./SSH";
+import { installPM2 } from "./installPM2";
+import { upload } from "./upload";
+import PM2Handler from "./PM2Handler";
 
 export default {
-	connection,
+  connection,
   upload,
-  installPM2
-}
+  installPM2,
+  PM2Handler,
+};

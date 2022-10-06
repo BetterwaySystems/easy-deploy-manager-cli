@@ -51,7 +51,7 @@ const NextBundler = function (this: any, config: any = {}) {
 
     const makeTar = `
       cd ${output} && cd .. &&
-      tar -cvf ed-output.tar ed-output`;
+      tar -cvf bundle.tar ed-output`;
 
     command += makeTar;
 
