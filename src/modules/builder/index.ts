@@ -10,7 +10,7 @@ const Builders = {
   nest: NestBuilder,
 };
 
-function Builder(config: any): any {
+function Builder(config: any, options?:string): any {
   // const validator = validator(config);
 
   // validator.existInitFile();
@@ -19,8 +19,10 @@ function Builder(config: any): any {
 
   console.log("config.buildType >>>>>>>", config.buildType);
   console.log("Builders >>>", Builders.next);
+  console.log('BuildersPropOption>>>>>>', options)
 
-  return Builders[config.buildType as TBuildType](config);
+
+  return Builders[config.buildType as TBuildType](config, options);
 }
 
 export default Builder;
