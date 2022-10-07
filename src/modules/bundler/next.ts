@@ -32,8 +32,6 @@ const NextBundler = function (this: any, config: any = {}) {
       ".next",
       "next.config.ts",
       "next.config.js",
-      ".env.production",
-      ".env",
       "package.json",
       "package-lock.json",
       "yarn-lock.json",
@@ -51,7 +49,7 @@ const NextBundler = function (this: any, config: any = {}) {
 
     const makeTar = `
       cd ${output} && cd .. &&
-      tar -cvf bundle.tar ed-output`;
+      tar -cvf bundle.tar bundle`;
 
     command += makeTar;
 

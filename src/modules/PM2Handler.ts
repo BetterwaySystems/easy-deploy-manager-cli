@@ -3,8 +3,8 @@ import path from "path";
 
 interface IEcoSystemAppConfig {
   // General
-  name?: string;
-  script?: string;
+  name: string;
+  script: string;
   cwd?: string;
   args?: string;
   interpreter?: string;
@@ -45,35 +45,35 @@ interface IEcoSystemAppConfig {
   force?: boolean;
 }
 
-interface IEcoSystemConfig {
-  apps: Array<IEcoSystemAppConfig>;
-}
-
 const PM2Handler = function (this: any, config: any) {
   this._config = config;
+  return;
 };
 
-function getEnvironmentData() {}
-
 PM2Handler.prototype.generateEcoSystemConfig = function () {
-  // const that = JSON.parse(this);
-  console.log("generateEcoSystemConfig CONFIG>>> ", this._config);
-  // console.log("getIntegrationEnv >>>>>", this);
   const pwd = process.env["PWD"] || process.cwd();
   const fileName = "ecosystem.config.js";
 
-  let apps: any = [{}];
+  const defaultApplicationStartScriptCommands = {
+    next: "npx next start",
+    nest: "nest start",
+  };
 
-  apps[0].name = this._config.appName;
-  apps[0].script = "npx next start";
-  apps[0].instance = this._config.pm2?.instance;
-  apps[0].exec_mode = this._config.pm2?.exec_mode;
+  // TODO: package.json에서 start명령어가 없는 경우 defaultApplicationStartScriptCommands를 참조해서
+  let app: any = {
+    name: this._config.appName,
+    script: "npx next start",
+    env: this._config.env,
+  };
 
-  const env = getEnvironmentData();
-  apps[0].env = this._config.env;
+  for (const [key, value] of Object.entries(this._config.pm2)) {
+    if (key) {
+      app[key] = value;
+    }
+  }
 
   const dt = `module.exports = {
-    apps:${JSON.stringify(apps)}
+    apps:${JSON.stringify([app])}
   }`;
 
   fs.writeFileSync(path.join(pwd, fileName), dt);

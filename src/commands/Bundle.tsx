@@ -5,6 +5,37 @@ import Bundler from "../modules/bundler/index";
 import Builder from "../modules/builder/index";
 import PM2Handler from "../modules/PM2Handler";
 
+// TODO: init IDefaultDeployServerInfo 타입 인터페이스와 전역 타입으로 관리하기
+interface IServerConfig {
+  os: "ubuntu" | "amazonlinux" | "centos" | string;
+  host: string;
+  port: number | 22;
+  username: string;
+  password: string;
+  deploymentDir: string;
+  pemLocation: string;
+}
+
+interface IPM2Config {
+  exec_mode: "fork" | "cluster";
+  instance: string;
+}
+
+interface IEasyDeployConfig {
+  appLocation: string;
+  buildType: "next" | "nest";
+  packageManager: "yarn" | "npm" | "pnpm";
+  appName: string;
+  nodeVersion: string;
+  server: Array<IServerConfig>;
+  pm2: IPM2Config;
+  env: {
+    PORT: 3000;
+    TEST: "TEST";
+  };
+  output?: string;
+}
+
 interface IBundler {
   exec(): any;
 }
@@ -16,16 +47,18 @@ interface IBuilder {
 
 const Bundle = (props: any) => {
   // TODO 쓰기 및 참조 작업 전 항상 대상디렉토리가 존재하는지 확인 후 진행
-  const testInitFileDir = `${process.cwd()}/easy-deploy.json`;
   /**
-   * init 커맨드를 사용하여 생성 된 easy-deploy.json을 핸들링하기 위해 JSON형태 파싱
+   * init 커맨드에서 생성 된 easy-deploy.json을 핸들링하기 위해 JSON형태 파싱
    */
-  const config: any = JSON.parse(fs.readFileSync(testInitFileDir, "utf-8"));
+  const easyDeployFilePath = `${process.cwd()}/easy-deploy.json`;
+  const config: IEasyDeployConfig = JSON.parse(
+    fs.readFileSync(easyDeployFilePath, "utf-8")
+  );
 
   /**
    * 빌드 결과가 저장 될 디렉토리
    */
-  const defaultOutputPath = `${process.cwd()}/ed-output`;
+  const defaultOutputPath = `${process.cwd()}/bundle`;
 
   /**
    * output or o 옵션이 들어오는 경우 옵션 값을 우선함
@@ -33,7 +66,7 @@ const Bundle = (props: any) => {
   config.output = props.output || props.o || defaultOutputPath;
 
   /**
-   * pm2 테스트용도
+   * pm2 ecosystem.config 생성 테스트용도
    */
   const pm2handler = new (PM2Handler as any)(config);
   pm2handler.generateEcoSystemConfig(config);
