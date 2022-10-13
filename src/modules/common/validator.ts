@@ -11,7 +11,7 @@ InitFileValidator.prototype.existBuildType = function (command: string) {
   console.log("command", command);
   console.log("this._config", this._config);
 };
-InitFileValidator.prototype.existAppLocaion = function (command: string) {
+InitFileValidator.prototype.existAppLocation = function (command: string) {
   console.log("command", command);
   console.log("this._config", this._config);
 };

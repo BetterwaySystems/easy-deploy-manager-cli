@@ -5,41 +5,6 @@ import dedent from 'dedent';
 import fs from 'fs';
 import { InitDescription, InitDefaultInputComponent } from '../components';
 
-interface ISelectOption {
-  label: string;
-  value: string;
-}
-interface IInitSettingForComponent {
-  type: 'selectInput' | 'textInput';
-  target: string;
-  label: string;
-  rangeNum: number;
-  defaultValue?: string;
-  itemList?: Array<ISelectOption>;
-}
-interface IDefaultDeployServerInfo {
-  os: 'ubuntu' | 'amazonlinux' | 'centos' | string;
-  host: string;
-  port: string;
-  username: string;
-  password: string;
-  deploymentDir: string;
-  pemLocation: string;
-}
-interface IDefaultDeployPM2Info {
-  exec_mode: 'fork' | 'cluster' | string;
-  instance: string;
-}
-interface IDefaultInitInfo {
-  buildType: 'next' | 'nest' | string;
-  packageManager: 'npm' | 'yarn' | 'pnmp' | string;
-  appName: string;
-  nodeVersion: string;
-  server: IDefaultDeployServerInfo;
-  pm2: IDefaultDeployPM2Info;
-  env: Record<string, any>;
-}
-
 const frameworkList = [
   {
     label: 'next',
@@ -275,4 +240,3 @@ const Init = () => {
 };
 
 export default Init;
-export { ISelectOption, IDefaultInitInfo, IInitSettingForComponent };

@@ -1,36 +1,15 @@
-import { Client, ClientErrorExtensions, SFTPWrapper } from "ssh2";
+import { Client, ClientErrorExtensions } from "ssh2";
 import { readFileSync } from "fs";
 import { parse } from 'node:path/posix'
 
-interface ISSHConfig {
-  host: string;
-  port: number | 22;
-  username: string;
-  password?: string;
-  privateKey?: Buffer;
-}
-
-interface ISSH {
-  _client: Array<IClient>;
-  closeAllConnections: Function;
-  exec : (command: string) => Promise<[{stdout : string, stderr: string}]>;
-  exists: (path: string) => Promise<boolean[]>;
-  mkdir: (path: string) => Promise<void>;
-}
-
-interface IClient {
-  connection: Client;
-  sftp: SFTPWrapper;
-}
-
-let connectinPool: ISSH | null = null;
+let connectionPool: ISSH | null = null;
 
 const SSH = function (this: ISSH, configList: Array<ISSHConfig>) {
   return new Promise<ISSH>(async (res) => {
 
     // Single Connection Pool
-    if (connectinPool) {
-      return res(connectinPool);
+    if (connectionPool) {
+      return res(connectionPool);
     };
 
     this._client = await Promise.all(configList.map((config) => {
@@ -70,7 +49,7 @@ const SSH = function (this: ISSH, configList: Array<ISSHConfig>) {
       });
     }));
 
-    connectinPool = this;
+    connectionPool = this;
     res(this);
   });
 };
@@ -193,4 +172,3 @@ const connection = async ({ module }: { module: boolean }) => {
 };
 
 export { SSH, connection };
-export { ISSH }

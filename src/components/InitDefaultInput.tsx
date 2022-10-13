@@ -2,20 +2,6 @@ import React from 'react';
 import { Text, Box } from 'ink';
 import SelectInput from 'ink-select-input';
 import { UncontrolledTextInput } from 'ink-text-input';
-import { ISelectOption, IDefaultInitInfo, IInitSettingForComponent } from '../commands/Init';
-
-interface InitDefaultInputComponentProps {
-  initSettingInfo: IInitSettingForComponent;
-  defaultInitInfo: IDefaultInitInfo;
-  step: number;
-  setStep: (step: number) => void;
-  setDefaultInitInfo: (defaultInitInfo: IDefaultInitInfo) => void;
-}
-interface IInitKeyInfoForSetValue {
-  index: number;
-  oneDepth: string | undefined;
-  twoDepth: string | undefined;
-}
 
 const InitDefaultInputComponent = (props: InitDefaultInputComponentProps) => {
   const { initSettingInfo, step, defaultInitInfo, setStep, setDefaultInitInfo } = props;
