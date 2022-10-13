@@ -3,22 +3,6 @@ import cliProgress from 'cli-progress'
 import { parse } from 'node:path/posix'
 import { connection } from './SSH'
 
-interface IPutFileOptions {
-  onProgress? : Function
-}
-
-interface ISSHConfig {
-  host    : string
-  username: string
-  password: string
-}
-interface ISSH {
-  _client : Client | null
-  _sftp   : any
-  putFile : Function
-  exec    : Function
-  mkdir   : Function
-}
 // SSH 커넥션 작업 완료전까지 임시로 쓸 SSH 커넥션
 const SSH = function(this: any, config : ISSHConfig ){
 
@@ -39,12 +23,6 @@ const SSH = function(this: any, config : ISSHConfig ){
   });
 }
 
-interface IUpload {
-  path    : string
-  dest    : string
-  title?  : string
-}
-
 const upload = async ({path, title, dest} : IUpload)=> {
 
   const client = await connection({module : false});
@@ -55,20 +33,20 @@ const upload = async ({path, title, dest} : IUpload)=> {
   return Promise.all(client._client.map((server)=>{
 
     return new Promise((resolve)=>{
-      let totalTransfered = 0;
+      let totalTransferred = 0;
 
       const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
       let isInit = false;
     
     
-      function ProgressBar(percent:number, transfered:number, total:number){
+      function ProgressBar(percent:number, transferred:number, total:number){
         if (!isInit) {
           if (title) console.log(`[ ${title} ] UPLOAD`)
-          progressBar.start(total, transfered);
+          progressBar.start(total, transferred);
           isInit = true; 
         }
         
-        progressBar.update(transfered, {filename : title});
+        progressBar.update(transferred, {filename : title});
     
         if (percent === 100){
           progressBar.stop();
@@ -76,9 +54,9 @@ const upload = async ({path, title, dest} : IUpload)=> {
       }
 
       function sendProgressInfo(_tt : any, chunk : any, total : any) {
-        totalTransfered += chunk;
-        let completedPercentage = (totalTransfered/total) * 100;
-          ProgressBar(completedPercentage, totalTransfered, total);
+        totalTransferred += chunk;
+        let completedPercentage = (totalTransferred/total) * 100;
+          ProgressBar(completedPercentage, totalTransferred, total);
       }
 
       let fastPutOptions = {
@@ -96,9 +74,4 @@ const upload = async ({path, title, dest} : IUpload)=> {
 export {
   upload,
   SSH,
-}
-
-export {
-  IUpload,
-  ISSH,
 }

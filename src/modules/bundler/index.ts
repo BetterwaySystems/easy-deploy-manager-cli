@@ -1,8 +1,6 @@
 import NextBundler from "./next";
 import NestBundler from "./nest";
 
-type TBuildType = "next" | "nest";
-
 const Bundlers = {
   next: NextBundler,
   nest: NestBundler,
