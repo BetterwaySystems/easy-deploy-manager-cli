@@ -11,7 +11,7 @@ const NestBuilder = function (this: any, config: any): any {
       console.log('finished building, please check your build folder!');
       })
       buildChild.on('error', (err) => {
-      console.log('error has occured!!!', err);
+      console.log('error has occurred!!!', err);
     })
   }
   return { exec };

@@ -19,16 +19,10 @@ const App = ({ command, options } : IAppProps)=>{
   // For Module 테스트
   if ( options?.['module'] ) {
     if (command === 'connection') modules[command](options as any);
-    // modules[command](options as any);
-    return <></>
-  }
-
-  // For Module 테스트
-  if ( options?.['module'] ) {
     if (command === 'upload') modules[command](options as any)
+
     return <></>
   }
-
 
   const cmd = getCommand(command);
 

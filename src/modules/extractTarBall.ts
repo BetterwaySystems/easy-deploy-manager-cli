@@ -1,4 +1,4 @@
-import { ISSH, SSH } from './upload'
+import { SSH } from './upload'
 
 async function extractTarBall(){
 
