@@ -1,9 +1,7 @@
-import { connection } from './SSH';
 import { installPM2 } from './installPM2';
-import { upload } from './upload';
+import getRemoteServer from './SSH';
 
-export default {
-	connection,
-  upload,
-  installPM2
+export {
+  installPM2,
+  getRemoteServer,
 }

@@ -6,6 +6,7 @@ import Scale from './Scale'
 import Start from './Start'
 import Status from './Status'
 import Stop from './Stop'
+import SampleSSH from './SampleSSH'
 
 export default {
   Bundle,
@@ -16,4 +17,5 @@ export default {
   Start,
   Status,
   Stop,
+  SampleSSH,
 }
