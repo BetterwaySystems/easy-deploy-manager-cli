@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text} from 'ink';
 import commands from './commands';
-import modules from './modules';
+import * as modules from './modules';
 
 type Tcommand = 'bundle'| 'deploy'| 'init'| 'revert'| 'scale'| 'start'| 'status'| 'stop' | string
 
@@ -18,9 +18,6 @@ function getCommand(command:string | undefined ){
 const App = ({ command, options } : IAppProps)=>{
   // For Module 테스트
   if ( options?.['module'] ) {
-    if (command === 'connection') modules[command](options as any);
-    if (command === 'upload') modules[command](options as any)
-
     return <></>
   }
 
