@@ -5,15 +5,6 @@ import { Text } from "ink";
 import Bundler from "../modules/bundler/index";
 import Builder from "../modules/builder/index";
 
-interface IBundler {
-  exec(): any;
-}
-
-interface IBuilder {
-  exec(): any;
-  validator(): any;
-}
-
 const Bundle = (props: any) => {
   // const [updateFrame, setUpdateFrame] = useState("");
   // let timer;

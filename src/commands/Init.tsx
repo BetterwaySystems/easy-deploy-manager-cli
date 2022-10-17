@@ -5,41 +5,6 @@ import dedent from 'dedent';
 import fs from 'fs';
 import { InitDescription, InitDefaultInputComponent } from '../components';
 
-interface ISelectOption {
-  label: string;
-  value: string;
-}
-interface IInitSettingForComponent {
-  type: 'selectInput' | 'textInput';
-  target: string;
-  label: string;
-  rangeNum: number;
-  defaultValue?: string;
-  itemList?: Array<ISelectOption>;
-}
-interface IDefaultDeployServerInfo {
-  os: 'ubuntu' | 'amazonlinux' | 'centos' | string;
-  host: string;
-  port: number;
-  username: string;
-  password: string;
-  deploymentDir: string;
-  pemLocation: string;
-}
-interface IDefaultDeployPM2Info {
-  exec_mode: 'fork' | 'cluster' | string;
-  instance: string;
-}
-interface IDefaultInitInfo {
-  buildType: 'next' | 'nest' | string;
-  packageManager: 'npm' | 'yarn' | 'pnmp' | string;
-  appName: string;
-  nodeVersion: string;
-  server: IDefaultDeployServerInfo;
-  pm2: IDefaultDeployPM2Info;
-  env: Record<string, any>;
-}
-
 const frameworkList = [
   {
     label: 'next',
@@ -163,19 +128,25 @@ const initSettingInfo: Array<IInitSettingForComponent> = [
     rangeNum: 9,
   },
   {
+    type: 'textInput',
+    target: 'server.alias',
+    label: '(server) alias',
+    rangeNum: 10,
+  },
+  {
     type: 'selectInput',
     target: 'pm2.exec_mode',
     label: '(pm2) exec_mode',
     itemList: pm2ExecModeList,
     defaultValue: 'fork',
-    rangeNum: 10,
+    rangeNum: 11,
   },
   {
     type: 'textInput',
     target: 'pm2.instance',
     label: '(pm2) instance',
     defaultValue: '1',
-    rangeNum: 11,
+    rangeNum: 12,
   },
 ];
 
@@ -204,6 +175,7 @@ const Init = () => {
       password: '(If you need a password to access the remote server, enter it)',
       deploymentDir: '/home/ec2-user',
       pemLocation: '(Enter the local path where the pem file is located)',
+      alias: '(Enter the server connection alias)',
     },
     pm2: {
       exec_mode: 'fork',
@@ -215,12 +187,10 @@ const Init = () => {
   if (step > initSettingInfo.length - 1) {
     const initializeFileInfo = {
       ...defaultInitInfo,
-      server: [
-        {
-          ...defaultInitInfo.server,
-          port: Number(defaultInitInfo.server.port),
-        },
-      ],
+      server: {
+        ...defaultInitInfo.server,
+        port: Number(defaultInitInfo.server.port),
+      },
     };
 
     // create easy-deploy.json
@@ -233,17 +203,16 @@ const Init = () => {
       "packageManager": "${defaultInitInfo.packageManager}",
       "appName": "${defaultInitInfo.appName}",
       "nodeVersion": "${defaultInitInfo.nodeVersion}",
-      "server": [
-        {
-          "os": "${defaultInitInfo.server.os}"
-          "host": "${defaultInitInfo.server.host}",
-          "port": ${defaultInitInfo.server.port},
-          "username": "${defaultInitInfo.server.username}",
-          "password": "${defaultInitInfo.server.password}",
-          "deploymentDir": "${defaultInitInfo.server.deploymentDir}",
-          "pemLocation": "${defaultInitInfo.server.pemLocation}"
-        }
-      ],
+      "server": {
+        "os": "${defaultInitInfo.server.os}"
+        "host": "${defaultInitInfo.server.host}",
+        "port": ${defaultInitInfo.server.port},
+        "username": "${defaultInitInfo.server.username}",
+        "password": "${defaultInitInfo.server.password}",
+        "deploymentDir": "${defaultInitInfo.server.deploymentDir}",
+        "pemLocation": "${defaultInitInfo.server.pemLocation}",
+        "alias": "${defaultInitInfo.server.alias}"
+      },
       "pm2": {
         "exec_mode": "${defaultInitInfo.pm2.exec_mode}",
         "instance": "${defaultInitInfo.pm2.instance}"
@@ -285,4 +254,3 @@ const Init = () => {
 };
 
 export default Init;
-export { ISelectOption, IDefaultInitInfo, IInitSettingForComponent, IDefaultDeployServerInfo };

@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { ISSH, SSH } from './upload';
+import { SSH } from './upload';
 
 async function installNode(version: string) {
   const sshConfig = {};
