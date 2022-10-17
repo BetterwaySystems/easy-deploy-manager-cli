@@ -1,14 +1,17 @@
-import { readFileSync } from 'fs';
-import { SSH } from './upload';
+import getRemoteServer from './SSH';
 
-async function installNode(version: string) {
-  const sshConfig = {};
+async function installNode() {
+  const version = '16.4.0';
+  const config = {};
 
-  const client: ISSH = await new (SSH as any)(sshConfig);
+  const client: ISSH = await getRemoteServer(config);
   const node_version = `v${version}`;
 
   console.log('check nvm has installed');
-  const { stdout: hasNvm } = await client.exec('find $HOME/.nvm -name nvm.sh');
+  const checkNvmInstalled: ISSHExecResult = await client.exec(
+    'find $HOME/.nvm -name nvm.sh',
+  );
+  const hasNvm = checkNvmInstalled.stdout;
 
   if (hasNvm) {
     console.log('nvm is already installed');
