@@ -1,98 +1,215 @@
-import { Client, ClientErrorExtensions, SFTPWrapper } from "ssh2";
-import { readFileSync } from "fs";
+import { Client, ClientErrorExtensions } from "ssh2";
+import { parse } from 'node:path/posix'
+import { readFileSync } from "node:fs";
 
-interface ISSHConfig {
-  host: string;
-  port: number | 22;
-  username: string;
-  password?: string;
-  privateKey?: Buffer;
-}
+const connectionPool : Partial<Record<string, RemoteServer>> = {};
 
-interface ISSH {
-  _client: Array<IClient> | null;
-  closeAllConnections: Function;
-}
-
-interface IClient {
-  connection: Client | null;
-  sftp: SFTPWrapper | null;
-}
-
-const SSH = function (this: any, configList: Array<ISSHConfig>) {
-  return new Promise<ISSH>((resolve, reject) => {
-    this._client = configList.map((config) => {
-      const conn = new Client();
-      const tmpClient: IClient = {
-        connection: null,
-        sftp: null,
+function readyEventHandler(conn : Client, resolve : (value : IClient)=> void, reject : (reason? : any)=> void) {
+  return (err: Error & ClientErrorExtensions)=>{
+    if (err) {
+      return reject(err);
+    }
+  
+    conn.sftp((err, sftp) => {
+      if (err) {
+        return reject(err);
+      }
+  
+      const remoteClient: IClient = {
+        connection: conn,
+        sftp: sftp,
       };
-
-      conn
-        .once("ready", (err: Error & ClientErrorExtensions) => {
-          if (err) {
-            this._client = null;
-            return reject(err);
-          }
-
-          conn.sftp((err, sftp) => {
-            if (err) {
-              this._client = null;
-              return reject(err);
-            }
-            tmpClient.sftp = sftp;
-          });
-
-          console.log(`${config.host}:${config.port} is connect`);
-        })
-        .once("close", () => {
-          console.log(`${config.host}:${config.port} is closed`);
-        })
-        .once("error", (err: Error) => {
-          console.log(`${config.host}:${config.port} cannot connected`);
-          this._client = null;
-          return reject(err);
-        })
-        .connect(config);
-
-      tmpClient.connection = conn;
-
-      return tmpClient;
+      
+      resolve(remoteClient);
     });
-
-    resolve(this);
-  });
-};
-
-SSH.prototype.closeAllConnections = function () {
-  return Promise.all(
-    this._client.map((c: IClient) => {
-      c.connection?.end();
-    }),
-  );
-};
-
-const connection = async ({ module }: { module: boolean }) => {
-  const initFile = `${process.cwd()}/easy-deploy.json`;
-  const config: any = JSON.parse(readFileSync(initFile, "utf-8"));
-
-  const sshConfig: Array<ISSHConfig> = config.server.map((s: any) => {
-    return {
-      host: s.host,
-      port: s.port,
-      username: s.username,
-      password: s.password,
-      privateKey: readFileSync(s.pemLocation),
-    };
-  });
-
-  if (module) {
-    const client: ISSH = await new (SSH as any)(sshConfig);
-
-    setTimeout(async () => {
-      await client.closeAllConnections();
-    }, 3000);
   }
-};
+}
 
-export { SSH, connection };
+function errorEventHandler(reject : (reason? : any) => void) {
+  return (err: Error)=>{
+    reject(err.message);
+  }
+}
+
+function getConnection(config: ISSHConfig) {
+  
+  return new Promise<IClient>((resolve, reject)=>{
+    const conn = new Client();
+    conn
+      .once("ready", readyEventHandler(conn, resolve, reject))
+      .once("error", errorEventHandler(reject))
+      .connect(config);
+  });
+
+}
+
+class RemoteServer {
+  _raw;
+  name;
+
+  constructor(client : IClient, name: string){
+    this._raw = client;
+    this.name = name;
+  }
+
+  exec(command: string, options?: IExecOptions){
+    return new Promise((resolve, reject)=>{
+      this._raw.connection.exec(command, function (err, stream) {
+        if(err) {
+          reject(err);
+        } else {
+          var context : any = {stdout: "", stderr: ""};
+          stream.on('close', function(code : number, signal : any) {
+            context.code = code;
+            context.signal = signal;
+            if (code !== 0) { reject(context.stderr) }
+            else resolve(true);
+          }).on('data', function(data:any) {
+            data = data.toString();
+            if (options?.onStdout) options.onStdout(data);
+            context.stdout += data;
+          }).stderr.on('data', function(data:any) {
+            data = data.toString();
+            context.stderr += data;
+          });
+        }
+      });
+    });
+  }
+
+  exists(path: string){
+    return new Promise<Boolean>((resolve, reject) => {
+
+      let {dir, base} = parse(path);
+  
+      this._raw.sftp.readdir(dir, (err:any, list:any) => {
+        if (err) {
+          if (err.code === 2) {
+            resolve(false);
+          } else {
+            reject(
+              new Error(`Error listing ${dir}: code: ${err.code} ${err.message}`)
+            );
+          }
+        } else {
+          let [type] = list
+            .filter((item:any) => item.filename === base)
+            .map((item:any) => item.longname.substr(0, 1));
+          if (type) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        }
+      });
+  
+    });
+  }
+
+  async mkdir(path: string, originPath?: string): Promise<Boolean> {
+
+    const haveDir = await this.exists(path);
+    if(haveDir) return true;
+
+    let doMkdir = (p:string) => {
+      return new Promise<Boolean>((resolve, reject) => {
+        this._raw.sftp.mkdir(p, (err) => {
+          if (err) {
+            reject(new Error(`Failed to create directory ${p}: ${err.message}`));
+          }
+          resolve(true);
+        });
+      });
+    };
+
+    const { dir } = parse(path);
+
+    const havePreviousDir = await this.exists(dir);
+    if (havePreviousDir){
+      const result = await doMkdir(path)
+      if (originPath) {
+        if (path === originPath) return true;
+        else return await this.mkdir(originPath);
+      };
+      return result;
+    };
+    return await this.mkdir(dir, originPath || path);
+  }
+
+  putFile(path:string, dest:string, options?: any){
+    
+    return new Promise(async (resolve, reject)=>{
+      let totalTransfered = 0;
+  
+      function sendProgressInfo(_tt : any, chunk : any, total : any) {
+        totalTransfered += chunk;
+        let completedPercentage = (totalTransfered/total) * 100;
+        if(options?.onProgress) {
+          options.onProgress(completedPercentage, totalTransfered, total);
+        }
+      }
+  
+      let fastPutOptions = {
+        step: sendProgressInfo
+      };
+  
+      let { dir } = parse(dest)
+      await this.mkdir(dir);
+      this._raw.sftp.fastPut(path, dest, fastPutOptions, (err)=>{
+        if (err) reject(err)
+        else resolve(true)
+      })
+  
+    })
+  }
+
+  async extractTarBall(path:string, dest?:string){
+    const { dir, base } = parse(path)
+
+    let command = `cd ${dir} && tar -xvf ${base}`;
+
+    if (dest){
+      await this.mkdir(dest);
+      command += ` -C ${dest}`;
+    }
+
+    try {
+      return await this.exec(command)
+    }catch (err){
+      throw err
+    }
+  }
+
+  close(){
+    return new Promise((resolve)=>{
+      this._raw.connection.end();
+      resolve(void 0); 
+    });
+  }
+}
+
+async function getRemoteServer(config : ISSHConfig){
+
+  const uuid = config.alias || config.host;
+  // Single Connection Pool
+  if (connectionPool[uuid]) {
+    console.log('싱글톤 패턴 객체 돌려줌!')
+    return connectionPool[uuid] as RemoteServer;
+  }
+
+  try {
+
+    if (config.pemLocation){
+      config.privateKey = readFileSync(config.pemLocation);
+    }
+
+    const client = await getConnection(config);
+    connectionPool[uuid] = new RemoteServer(client, uuid);
+    return connectionPool[uuid] as RemoteServer;
+  }catch (error){
+    throw Error();
+  }
+
+}
+
+export default getRemoteServer;

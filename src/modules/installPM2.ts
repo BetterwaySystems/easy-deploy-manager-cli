@@ -1,12 +1,5 @@
 import { readFileSync } from 'fs';
-import { ISSH, SSH } from './upload'
-
-interface IExecResult {
-  stdout: string;
-  stderr: string;
-  code: number;
-  signal: any;
-}
+import { SSH } from './upload'
 
 const PM2_VERSION: string = '5.2.0';
 const COMMAND_NOT_FOUND_CODE = 127;
@@ -17,8 +10,8 @@ async function installPM2() {
 
   const client : ISSH = await new (SSH as any)(sshConfig);
 
-  const checkPM2Version: IExecResult = await client.exec('pm2 --version');
-  const checkNodeVersion: IExecResult = await client.exec('node --version');
+  const checkPM2Version: ISSHExecResult = await client.exec('pm2 --version');
+  const checkNodeVersion: ISSHExecResult = await client.exec('node --version');
   const nodeVersion: string = checkNodeVersion.stdout.replace('\n', '');
   const pm2Version: string = checkPM2Version.stdout.replace('\n', '');
 

@@ -36,15 +36,6 @@ interface IEasyDeployConfig {
   output?: string;
 }
 
-interface IBundler {
-  exec(): any;
-}
-
-interface IBuilder {
-  exec(): any;
-  validator(): any;
-}
-
 const Bundle = (props: any) => {
   // TODO 쓰기 및 참조 작업 전 항상 대상디렉토리가 존재하는지 확인 후 진행
   /**
