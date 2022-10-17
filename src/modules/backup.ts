@@ -23,11 +23,11 @@ const generateBackUpFolder = async (remoteServer: ISSH, appName: string, serverI
   try {
     // check bundle folder already is use & backup folder
     command = `find ${deploymentDir}/ -name ${appName}.tar`;
-    const { stdout: hasBundleFile } = await remoteServer.exec(command);
+    const hasBundleFile = await remoteServer.exec(command);
 
     if (hasBundleFile) {
       command = `find ${deploymentDir}/ -name ${BACKUP_FOLDER} -type d`;
-      const { stdout: hasBackupFolder } = await remoteServer.exec(command);
+      const hasBackupFolder = await remoteServer.exec(command);
       if (!hasBackupFolder) {
         command = `mkdir ${BACKUP_FOLDER}`;
         await remoteServer.exec(command);
