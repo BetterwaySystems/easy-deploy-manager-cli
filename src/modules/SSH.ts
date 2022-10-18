@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const connectionPool : Partial<Record<string, RemoteServer>> = {};
 const PM2_VERSION: string = '5.2.0';
 const COMMAND_NOT_FOUND_CODE = 127;
+const BACKUP_FOLDER = 'backup';
 
 function readyEventHandler(conn : Client, resolve : (value : IClient)=> void, reject : (reason? : any)=> void) {
   return (err: Error & ClientErrorExtensions)=>{
@@ -214,6 +215,51 @@ class RemoteServer {
       this._raw.connection.end();
       resolve(void 0); 
     });
+  }
+
+  /**
+   * Generate backup folder for rollback at any time
+   * @param {string} appName - is name for pm2 manage 
+   * @param {string} dir - is root path of remote server 
+   */
+  async backup(appName: string, dir: string) {
+    let path = '';
+    let command = '';
+
+    try { 
+      // Check if you already have a running deploy folder
+      path = `${dir}/${appName}`;
+      const hasBundle = await this.exists(path);
+      if(!hasBundle) return false;
+
+      // After checking if the backup folder exists, create it if it doesn't exist.
+      path = `${dir}/${BACKUP_FOLDER}`;
+      const hasBackup = await this.exists(path); 
+      if(!hasBackup) {
+        command = `cd ${dir} && mkdir ${BACKUP_FOLDER}`;
+        await this.exec(command);
+      }
+
+      // Move the existing deploy folder to the backup folder
+      command = `mv ${dir}/${appName}/* ${dir}/${BACKUP_FOLDER}`;
+      return await this.exec(command);
+    } catch(err) {
+      throw err;
+    }
+  }
+
+  /**
+   * Use Existing node_modules folder
+   * @param {string} appName - is name for pm2 manage
+   * @param {string} dir - is root path of remote server
+   */
+  async useExistingNodeModules(appName: string, dir: string) {
+    const command = `cp -r ${dir}/${BACKUP_FOLDER}/node_modules ${dir}/${appName}`;
+    try {
+      return await this.exec(command);
+    } catch(err) {
+      throw err;
+    }
   }
 }
 

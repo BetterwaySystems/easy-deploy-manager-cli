@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text} from 'ink';
 import commands from './commands';
-import * as modules from './modules';
+import { getConfig } from './modules/common/parseJsonFile';
 
 type Tcommand = 'bundle'| 'deploy'| 'init'| 'revert'| 'scale'| 'start'| 'status'| 'stop' | string
 
@@ -37,7 +37,13 @@ const App = ({ command, options } : IAppProps)=>{
     </>
   )
 
-  return <Component {...options}/>
+  try {
+    const config = getConfig(options?.['config']);
+    return <Component config={config} options={options} />
+  }catch {
+    if (command === 'init') return <Component options={options} />
+    else return <Text color='red'>{`[ ERROR ] : Config File not found. Please use 'ed-manager --help' and see blow.`}</Text>
+  }
 }
 
 export default App;
