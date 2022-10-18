@@ -19,7 +19,7 @@ const parseJsonFile = (path: string) => {
  * @param {string} config - is user defined easy-deploy file location
  * @returns init parsed json
  */
-const getInitJsonFile = (config: string) => {
+const getConfig = (config?: string) => {
   try {
     const filePath = config ?? `${process.cwd()}/easy-deploy.json`;
     const initDefaultJson = parseJsonFile(filePath);
@@ -30,4 +30,4 @@ const getInitJsonFile = (config: string) => {
 }
 
 
-export { parseJsonFile, getInitJsonFile };
+export { parseJsonFile, getConfig };
