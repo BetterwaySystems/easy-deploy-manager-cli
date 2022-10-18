@@ -3,6 +3,8 @@ import { parse } from 'node:path/posix'
 import { readFileSync } from "node:fs";
 
 const connectionPool : Partial<Record<string, RemoteServer>> = {};
+const PM2_VERSION: string = '5.2.0';
+const COMMAND_NOT_FOUND_CODE = 127;
 
 function readyEventHandler(conn : Client, resolve : (value : IClient)=> void, reject : (reason? : any)=> void) {
   return (err: Error & ClientErrorExtensions)=>{
@@ -62,7 +64,7 @@ class RemoteServer {
           stream.on('close', function(code : number, signal : any) {
             context.code = code;
             context.signal = signal;
-            if (code !== 0) { reject(context.stderr) }
+            if (code !== 0) { reject({ code, stderr: context.stderr }) }
             else resolve(true);
           }).on('data', function(data:any) {
             data = data.toString();
@@ -178,6 +180,33 @@ class RemoteServer {
     }catch (err){
       throw err
     }
+  }
+
+  async installPM2(nodeVersion: string) {
+    let pm2Version, uninstalledPM2;
+
+    try {
+      await this.exec('pm2 --version', { onStdout: (content: string) => {
+        pm2Version = content;
+      }});
+    } catch(err) {
+      const error = err as {code: number, stderr: string}
+      if (error.code === COMMAND_NOT_FOUND_CODE) uninstalledPM2 = true;
+      else throw err;
+    }
+
+    const differentVersion = !uninstalledPM2 && pm2Version !== PM2_VERSION;
+
+    if (uninstalledPM2 || differentVersion) {
+      const installCommand = `npm install -g pm2@${PM2_VERSION} && sudo ln -s -f ~/.nvm/versions/node/${nodeVersion}/bin/pm2 /usr/local/bin`;
+      try {
+        return await this.exec(installCommand);
+      } catch(err) {
+        throw err;
+      }
+    }
+
+    return true;
   }
 
   close(){
