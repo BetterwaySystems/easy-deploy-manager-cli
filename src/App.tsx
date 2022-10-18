@@ -41,8 +41,8 @@ const App = ({ command, options } : IAppProps)=>{
     const config = getConfig(options?.['config']);
     return <Component config={config} options={options} />
   }catch {
-    if (command !== 'init') return <Component options={options} />
-    else return <Text color='red'>{`${cmd} is not a command. Please use 'ed-manager --help' and see blow.`}</Text>
+    if (command === 'init') return <Component options={options} />
+    else return <Text color='red'>{`[ ERROR ] : Config File not found. Please use 'ed-manager --help' and see blow.`}</Text>
   }
 }
 
