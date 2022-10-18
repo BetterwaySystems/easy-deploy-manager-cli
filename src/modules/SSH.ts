@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 
 const connectionPool : Partial<Record<string, RemoteServer>> = {};
 const BACKUP_FOLDER = 'backup';
+const BUNDLE_FOLDER = 'bundle'
 
 function readyEventHandler(conn : Client, resolve : (value : IClient)=> void, reject : (reason? : any)=> void) {
   return (err: Error & ClientErrorExtensions)=>{
@@ -229,6 +230,57 @@ class RemoteServer {
     try {
       return await this.exec(command);
     } catch(err) {
+      throw err;
+    }
+  }
+
+  async revertApp(appName: string, dir: string) {
+
+    try {
+      
+      const appDir = `${dir}/${appName}`;
+      const bundleDir = `${appDir}/${BUNDLE_FOLDER}`;
+      const backupDir = `${appDir}/${BACKUP_FOLDER}`;
+      const backupEcosystemPath = `${backupDir}/ecosystem.config.js`;
+      const revertTempDir = `${appDir}/temp`;
+      
+      // Check application directory
+      await this.exists(appDir);
+
+      // Check backup directory
+      await this.exists(backupDir);
+
+      // Check backup pm2 ecosystem file
+      await this.exists(backupEcosystemPath);
+
+      // Move current application to temp folder
+      let command1 = `mv ${bundleDir} ${revertTempDir}`;
+      await this.exec(command1);
+
+      // Move backup to bundle folder
+      let command2 = `mv ${backupDir} ${bundleDir}`;
+      await this.exec(command2);
+
+      // Move node_modules from temp to bundle folder
+      let command3 = `mv ${revertTempDir}/node_modules ${bundleDir}`;
+      await this.exec(command3);
+
+      // npm install 
+      // let command4 = `mv ${revertTempDir}/node_modules ${bundleDir}`;
+      // await this.exec(command3);
+
+      // Start previous application
+      let command5 = `cd ${bundleDir} && pm2 start ecosystem.config.js`;
+      await this.exec(command5);
+
+      // Remove temp folder
+      let command6 = `rm -rf ${revertTempDir}`;
+      await this.exec(command6);
+
+      await this.close();
+
+
+    } catch (err){
       throw err;
     }
   }
