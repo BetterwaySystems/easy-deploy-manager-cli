@@ -8,11 +8,13 @@ declare global {
   }
 
   interface ISSHConfig {
+    alias? : string;
     host: string;
-    port: number | 22;
+    port?: number | 22;
     username: string;
     password?: string;
     privateKey?: Buffer;
+    pemLocation?: string;
   }
 
   interface IClient {
@@ -41,5 +43,13 @@ declare global {
     path    : string
     dest    : string
     title?  : string
+  }
+
+  interface IExecOptions {
+    onStdout?: (content : string)=> void;
+  }
+
+  interface IPutFileOptions {
+    onProgress? : (completedPercentage : number, transfered : number, totalTransferSize : number)=> void
   }
 }
