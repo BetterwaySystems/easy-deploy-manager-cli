@@ -6,8 +6,12 @@ import { readFileSync } from 'fs';
  * @returns parsed json
  */
 const parseJsonFile = (path: string) => {
-  const fileData = readFileSync(path, 'utf8');
-  return JSON.parse(fileData);
+  try { 
+    const fileData = readFileSync(path, 'utf8');
+    return JSON.parse(fileData);
+  } catch(err) {
+    throw err;
+  }
 }
 
 /**
@@ -16,9 +20,13 @@ const parseJsonFile = (path: string) => {
  * @returns init parsed json
  */
 const getInitJsonFile = (config: string) => {
-  const filePath = config ?? `${process.cwd()}/easy-deploy.json`;
-  const initDefaultJson = parseJsonFile(filePath);
-  return initDefaultJson;
+  try {
+    const filePath = config ?? `${process.cwd()}/easy-deploy.json`;
+    const initDefaultJson = parseJsonFile(filePath);
+    return initDefaultJson;
+  } catch(err) {
+    throw err;
+  }
 }
 
 
