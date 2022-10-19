@@ -8,25 +8,26 @@ const InitDefaultInputComponent = (props: InitDefaultInputComponentProps) => {
   const { type, target, label, rangeNum, itemList, defaultValue } = initSettingInfo;
   const splitTarget = target.split('.');
 
-  // It fills the depth of the object by looping through the recursive function
-  const recursiveForAssignValue = (
-    targetObject: Record<string, any>,
-    { index, oneDepth, twoDepth }: IInitKeyInfoForSetValue,
-    value: string
-  ) => {
+  /**
+   * It fills the depth of the object by looping through the recursive function
+   * @param {Record<string, any>} targetObject is default initialize information
+   * @param {IInitKeyInfoForSetValue} { index, oneDepth, twoDepth } is for looping
+   * @param {string} value is input or select value
+   */
+  const recursiveForAssignValue = (targetObject: Record<string, any>, { index, oneDepth, twoDepth }: IInitKeyInfoForSetValue, value: string) => {
     if (!twoDepth) targetObject[`${oneDepth}`] = value;
     else {
       index += 1;
-      recursiveForAssignValue(
-        targetObject[`${oneDepth}`],
-        { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] },
-        value
-      );
+      recursiveForAssignValue(targetObject[`${oneDepth}`], { index, oneDepth: splitTarget[index], twoDepth: splitTarget[index + 1] }, value);
     }
   };
 
+  /**
+   *
+   * @param {string} value is input or select value
+   * @returns - If you don't enter the required values, you can't proceed to the next step.
+   */
   const setDefaultValue = (value: string) => {
-    // If you don't enter the required values, you can't proceed to the next step.
     const requiredValue = ['appName'];
     if (requiredValue.includes(target) && !value) return;
 
@@ -50,8 +51,7 @@ const InitDefaultInputComponent = (props: InitDefaultInputComponentProps) => {
               </Text>
             ) : (
               <Text>
-                <Text color="green">?</Text> Please pick a {label}:{' '}
-                {defaultValue ? <Text color="gray">({defaultValue})</Text> : ''}
+                <Text color="green">?</Text> Please pick a {label}: {defaultValue ? <Text color="gray">({defaultValue})</Text> : ''}
               </Text>
             )}
           </Box>
