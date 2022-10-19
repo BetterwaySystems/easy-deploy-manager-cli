@@ -10,6 +10,7 @@ const Revert = ({config} : ICommandProps)=>{
 
     try {
       await remoteServer.revertApp(config.appName, config.server.deploymentDir);
+      await remoteServer.close()
     }catch (error){
         console.error(error)
     }

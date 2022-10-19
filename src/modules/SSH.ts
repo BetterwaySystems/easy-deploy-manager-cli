@@ -1,6 +1,8 @@
 import { Client, ClientErrorExtensions } from "ssh2";
 import { parse } from 'node:path/posix'
 import { readFileSync } from "node:fs";
+import log from "./Log";
+import Log from "./Log";
 
 const connectionPool : Partial<Record<string, RemoteServer>> = {};
 const BACKUP_FOLDER = 'backup';
@@ -234,7 +236,17 @@ class RemoteServer {
     }
   }
 
-  async revertApp(appName: string, dir: string) {
+  async revertApp(appName: string, dir: string, options?: IRevertAppOptions) {
+
+    let log = new Log(appName);
+
+    let logger = (type : 'info' | 'warn' | 'error', msg:string )=>{
+      if (options?.disableLog !== true ) log[type](msg)
+      
+      if (options?.onStep?.constructor === Function) {
+        options.onStep(msg);
+      }
+    }
 
     try {
       
@@ -245,20 +257,25 @@ class RemoteServer {
       const revertTempDir = `${appDir}/temp`;
       
       // Check application directory
+      logger('info', `Check application`)
       await this.exists(appDir);
 
       // Check backup directory
+      logger('info', `Check backup`)
       await this.exists(backupDir);
 
       // Check backup pm2 ecosystem file
+      logger('info', `Check previous ecosystem`)
       await this.exists(backupEcosystemPath);
 
       // Move current application to temp folder
+      logger('info', `Move current application to temp`);
       let command1 = `mv ${bundleDir} ${revertTempDir}`;
       await this.exec(command1);
 
       // Move backup to bundle folder
-      let command2 = `mv ${backupDir} ${bundleDir}`;
+      logger('info', `Copy backup to current application`)
+      let command2 = `cp -r ${backupDir} ${bundleDir}`;
       await this.exec(command2);
 
       // Move node_modules from temp to bundle folder
@@ -266,21 +283,27 @@ class RemoteServer {
       await this.exec(command3);
 
       // npm install 
-      // let command4 = `mv ${revertTempDir}/node_modules ${bundleDir}`;
-      // await this.exec(command3);
+      logger('info', `Packages install`);
+      let command4 = `cd ${bundleDir} && npm install`;
+      await this.exec(command4, { onStdout : (stdout)=>{
+        if (options?.disableLog !== true) console.log(`[ NPM ] : ${stdout.trim()}`);
+      }});
 
       // Start previous application
+      logger('info', `Start previous application`);
       let command5 = `cd ${bundleDir} && pm2 start ecosystem.config.js`;
       await this.exec(command5);
 
       // Remove temp folder
+      logger('info', `Clear temp`);
       let command6 = `rm -rf ${revertTempDir}`;
       await this.exec(command6);
 
-      await this.close();
-
+      logger('info', `Revert Application Done!`);
+      return true;
 
     } catch (err){
+      console.log('[][][][][[]][][][ 에러낫스마아어ㅓ')
       throw err;
     }
   }
