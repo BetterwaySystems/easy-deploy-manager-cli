@@ -29,6 +29,11 @@ declare global {
     // signal: any;
   }
 
+  interface ISSHExecError {
+    code: string;
+    stderr: string;
+  }
+
   interface ISSH {
     _client: Array<IClient>;
     _sftp: any;
