@@ -33,6 +33,9 @@ PM2Handler.prototype.generateEcoSystemConfig = function () {
   }`;
 
   fs.writeFileSync(path.join(pwd, fileName), dt);
+
+  const ecosystemConfigLocation = path.join(pwd, fileName);
+  return ecosystemConfigLocation;
 };
 
 export default PM2Handler;

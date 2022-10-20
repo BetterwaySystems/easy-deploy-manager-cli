@@ -1,7 +1,7 @@
 import childProcess from "child_process";
 import appLocationDirectory from "../common/appLocationDirectory";
 
-const NextBundler = function (this: any, config: any = {}) {
+const NextBundler = function (this: any, config: any = {}, options: any) {
   const { appLocation, output } = config;
 
   function exec() {
@@ -18,14 +18,15 @@ const NextBundler = function (this: any, config: any = {}) {
         "pnpm-lock.yaml",
       ];
 
-      let command = "";
-
+      let command = `mv ${options.ecosystemConfigLocation} ${output}/ecosystem.config.js && `;
       for (const directory of findFiles) {
         if (includeBundleTargetFileNames.includes(directory.name)) {
           const appendCommand = `cp -r ${appLocation}/${directory.name} ${output}/${directory.name} && `;
           command += appendCommand;
         }
       }
+
+      command += ` ${output}/package.json`;
 
       const makeTar = `
       cd ${output} && cd .. &&

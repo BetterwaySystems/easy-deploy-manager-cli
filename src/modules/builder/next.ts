@@ -5,9 +5,10 @@ const NextBuilder = function (this: any, config: any = {}): any {
 
   function exec() {
     return new Promise((resolve: any, reject: any) => {
+      // 추가 명령어가 붙는 패키지의 경우 관리 리팩토링
       const command = `
         cd ${appLocation} && 
-        ${packageManager} build
+        ${["npm,  pnpm"].includes(packageManager) ? "run build" : "build"}
       `;
 
       const process: any = childProcess.exec(command);
