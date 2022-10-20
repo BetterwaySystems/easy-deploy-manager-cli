@@ -8,7 +8,11 @@ const NextBuilder = function (this: any, config: any = {}): any {
       // 추가 명령어가 붙는 패키지의 경우 관리 리팩토링
       const command = `
         cd ${appLocation} && 
-        ${["npm,  pnpm"].includes(packageManager) ? "run build" : "build"}
+        ${
+          ["npm,  pnpm"].includes(packageManager)
+            ? `${packageManager} run build`
+            : `${packageManager} build`
+        }
       `;
 
       const process: any = childProcess.exec(command);
