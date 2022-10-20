@@ -5,37 +5,6 @@ import Bundler from "../modules/bundler/index";
 import Builder from "../modules/builder/index";
 import PM2Handler from "../modules/PM2Handler";
 
-// TODO: init IDefaultDeployServerInfo 타입 인터페이스와 전역 타입으로 관리하기
-interface IServerConfig {
-  os: "ubuntu" | "amazonlinux" | "centos" | string;
-  host: string;
-  port: number | 22;
-  username: string;
-  password: string;
-  deploymentDir: string;
-  pemLocation: string;
-}
-
-interface IPM2Config {
-  exec_mode: "fork" | "cluster";
-  instance: string;
-}
-
-interface IEasyDeployConfig {
-  appLocation: string;
-  buildType: "next" | "nest";
-  packageManager: "yarn" | "npm" | "pnpm";
-  appName: string;
-  nodeVersion: string;
-  server: Array<IServerConfig>;
-  pm2: IPM2Config;
-  env: {
-    PORT: 3000;
-    TEST: "TEST";
-  };
-  output?: string;
-}
-
 const Bundle = (props: any) => {
   // TODO 쓰기 및 참조 작업 전 항상 대상디렉토리가 존재하는지 확인 후 진행
   /**
@@ -75,13 +44,20 @@ const Bundle = (props: any) => {
   const builder: IBuilder = Builder(config);
   const bundler: IBundler = Bundler(config);
 
-  try {
-    builder.exec();
-    bundler.exec();
-    // TODO 디렉토리 삭제?
-  } catch (e: any) {
-    throw new Error(e);
+  async function execHandler() {
+    try {
+      console.log("---------- build start ----------");
+      await builder.exec();
+      console.log("---------- build success ----------");
+      console.log("---------- bundle start ----------");
+      await bundler.exec();
+      console.log("---------- bundle success ----------");
+    } catch (err) {
+      console.log(err);
+    }
   }
+
+  execHandler();
 
   return (
     <>

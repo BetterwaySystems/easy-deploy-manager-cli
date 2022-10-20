@@ -1,27 +1,37 @@
-
 import childProcess from "child_process";
 
 const NextBuilder = function (this: any, config: any = {}): any {
   const { appLocation, packageManager } = config;
 
   function exec() {
-    const command = `
-      cd ${appLocation} && 
-      ${packageManager} build
-    `;
+    return new Promise((resolve: any, reject: any) => {
+      const command = `
+        cd ${appLocation} && 
+        ${packageManager} build
+      `;
 
-    childProcess.execSync(command);
-  }
+      const process: any = childProcess.exec(command);
 
-  function validator() {
-    return {
-      existInitFile() {},
-    };
+      process.stdout.on("data", function (data: any) {
+        console.log(data);
+      });
+
+      process.stderr.on("data", function (data: any) {
+        if (data) console.log(data);
+      });
+
+      process.on("exit", function (code: any) {
+        if (code == 0) {
+          resolve(true);
+        } else {
+          reject("builder command failed");
+        }
+      });
+    });
   }
 
   return {
     exec,
-    validator,
   };
 };
 

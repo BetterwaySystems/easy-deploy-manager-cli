@@ -1,59 +1,56 @@
 import childProcess from "child_process";
-import path from "path";
-import fs from "fs";
-
-function getAppLocationDirectories(location: any) {
-  const files = fs.readdirSync(location, { withFileTypes: true });
-  const directoriesInDIrectory = files.map((item: any) => {
-    if (item.isDirectory()) {
-      return {
-        type: "directory",
-        name: item.name,
-      };
-    } else {
-      return {
-        ext: path.extname(item.name),
-        type: "file",
-        name: item.name,
-      };
-    }
-  });
-
-  return directoriesInDIrectory;
-}
+import appLocationDirectory from "../common/appLocationDirectory";
 
 const NextBundler = function (this: any, config: any = {}) {
   const { appLocation, output } = config;
 
   function exec() {
-    const findFiles = getAppLocationDirectories(appLocation);
+    return new Promise((resolve: any, reject: any) => {
+      const findFiles = appLocationDirectory(appLocation);
 
-    const bundleTargetFileNames = [
-      ".next",
-      "next.config.ts",
-      "next.config.js",
-      "package.json",
-      "package-lock.json",
-      "yarn-lock.json",
-      "pnpm-lock.yaml",
-    ];
+      const includeBundleTargetFileNames = [
+        ".next",
+        "next.config.ts",
+        "next.config.js",
+        "package.json",
+        "package-lock.json",
+        "yarn-lock.json",
+        "pnpm-lock.yaml",
+      ];
 
-    let command = "";
+      let command = "";
 
-    for (const directory of findFiles) {
-      if (bundleTargetFileNames.includes(directory.name)) {
-        const appendCommand = `cp -r ${appLocation}/${directory.name} ${output}/${directory.name} && `;
-        command += appendCommand;
+      for (const directory of findFiles) {
+        if (includeBundleTargetFileNames.includes(directory.name)) {
+          const appendCommand = `cp -r ${appLocation}/${directory.name} ${output}/${directory.name} && `;
+          command += appendCommand;
+        }
       }
-    }
 
-    const makeTar = `
+      const makeTar = `
       cd ${output} && cd .. &&
       tar -cvf bundle.tar bundle`;
 
-    command += makeTar;
+      command += makeTar;
 
-    childProcess.execSync(command);
+      const process: any = childProcess.exec(command);
+
+      process.stdout.on("data", function (data: any) {
+        if (data) console.log(data);
+      });
+
+      process.stderr.on("data", function (data: any) {
+        if (data) console.log(data);
+      });
+
+      process.on("exit", function (code: any) {
+        if (code == 0) {
+          resolve(true);
+        } else {
+          reject("bundle command failed");
+        }
+      });
+    });
   }
 
   return {
