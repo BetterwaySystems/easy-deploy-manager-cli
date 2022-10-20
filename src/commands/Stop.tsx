@@ -2,12 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Text } from 'ink';
 import { getRemoteServer } from '../modules';
 
-const Stop = (props : any) => {
-  const { config } = props;
+const Stop = ({ config } : ICommandProps) => {
+
   const [ message, setMessage ] = useState<string>();
   const [ messageColor, setMessageColor ] = useState<string>();
 
   async function stopApplication() {
+    if(!config) {
+      setMessage("There is no config file");
+      return;
+    }
+
     const { appName, server } = config;
     const remoteServer = await getRemoteServer(server);
 
