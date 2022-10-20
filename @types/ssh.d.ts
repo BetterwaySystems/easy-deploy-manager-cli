@@ -57,4 +57,9 @@ declare global {
   interface IPutFileOptions {
     onProgress? : (completedPercentage : number, transfered : number, totalTransferSize : number)=> void
   }
+
+  interface IRevertAppOptions {
+    disableLog? : boolean
+    onStep? : (message : string)=> void
+  }
 }
