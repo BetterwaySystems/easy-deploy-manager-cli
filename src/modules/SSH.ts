@@ -1,7 +1,7 @@
 import { Client, ClientErrorExtensions } from "ssh2";
 import { parse } from 'node:path/posix'
 import { readFileSync } from "node:fs";
-import log from "./Log";
+import { getConfig } from "./common/parseJsonFile";
 import Log from "./Log";
 
 const connectionPool : Partial<Record<string, RemoteServer>> = {};
@@ -186,6 +186,37 @@ class RemoteServer {
     }
   }
 
+
+  async installNode() {
+    const { nodeVersion } = getConfig()
+  
+    const exec = async (command: string, callback?: (content: string) => void): Promise<boolean> => {
+      try {
+        await this.exec(command, { onStdout: callback });
+        return true;
+      } catch (error) {
+        const err = error as ISSHExecError
+        if (err.stderr) console.log(`\x1b[31m%s${err.stderr}\x1b[0m`);
+        return false;
+      }
+    };
+  
+    console.log('check nvm has installed');
+    const nvmInstalled = await exec(`nvm -v`);
+  
+    if (nvmInstalled) {
+      console.log('nvm is already installed');
+      const hasNodeVersion = await exec(`nvm ls ${nodeVersion}`);
+
+      if (hasNodeVersion) await exec(`nvm use ${nodeVersion}`, console.log);
+      else await exec(`nvm install ${nodeVersion}`, console.log);
+    } else {
+      console.log('nvm is not yet installed, starting nvm installing...');
+      const installNVM = `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && source $HOME/.nvm/nvm.sh && nvm install ${nodeVersion}`;
+      await exec(installNVM, console.log);
+    }
+  }
+
   async installPM2() {
     let pm2Version, nodeVersion, uninstalledPM2;
 
@@ -194,7 +225,7 @@ class RemoteServer {
         pm2Version = content;
       }});
     } catch(err) {
-      const error = err as {code: number, stderr: string}
+      const error = err as ISSHExecError
       if (error.code === COMMAND_NOT_FOUND_CODE) uninstalledPM2 = true;
       else throw err;
     }
