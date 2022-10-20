@@ -5,6 +5,8 @@ import log from "./Log";
 import Log from "./Log";
 
 const connectionPool : Partial<Record<string, RemoteServer>> = {};
+const PM2_VERSION: string = '5.2.0';
+const COMMAND_NOT_FOUND_CODE = 127;
 const BACKUP_FOLDER = 'backup';
 const BUNDLE_FOLDER = 'bundle'
 
@@ -66,7 +68,7 @@ class RemoteServer {
           stream.on('close', function(code : number, signal : any) {
             context.code = code;
             context.signal = signal;
-            if (code !== 0) { reject(context.stderr) }
+            if (code !== 0) { reject({ code, stderr: context.stderr }) }
             else resolve(true);
           }).on('data', function(data:any) {
             data = data.toString();
@@ -182,6 +184,41 @@ class RemoteServer {
     }catch (err){
       throw err
     }
+  }
+
+  async installPM2() {
+    let pm2Version, nodeVersion, uninstalledPM2;
+
+    try {
+      await this.exec('pm2 --version', { onStdout: (content: string) => {
+        pm2Version = content;
+      }});
+    } catch(err) {
+      const error = err as {code: number, stderr: string}
+      if (error.code === COMMAND_NOT_FOUND_CODE) uninstalledPM2 = true;
+      else throw err;
+    }
+
+    const differentVersion = !uninstalledPM2 && pm2Version !== PM2_VERSION;
+
+    if (uninstalledPM2 || differentVersion) {
+      try {
+        await this.exec('node --version', { onStdout: (content: string) => {
+          if (content !== '\n') nodeVersion = content;
+        }});
+      } catch(err) {
+        throw err;
+      }
+
+      const installCommand = `npm install -g pm2@${PM2_VERSION} && sudo ln -s -f ~/.nvm/versions/node/${nodeVersion}/bin/pm2 /usr/local/bin`;
+      try {
+        return await this.exec(installCommand);
+      } catch(err) {
+        throw err;
+      }
+    }
+
+    return true;
   }
 
   close(){
