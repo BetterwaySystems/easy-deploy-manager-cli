@@ -30,7 +30,7 @@ declare global {
   }
 
   interface ISSHExecError {
-    code: string;
+    code: number;
     stderr: string;
   }
 

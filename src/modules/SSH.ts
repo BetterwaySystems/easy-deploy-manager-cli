@@ -225,7 +225,7 @@ class RemoteServer {
         pm2Version = content;
       }});
     } catch(err) {
-      const error = err as {code: number, stderr: string}
+      const error = err as ISSHExecError
       if (error.code === COMMAND_NOT_FOUND_CODE) uninstalledPM2 = true;
       else throw err;
     }
