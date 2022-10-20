@@ -6,8 +6,8 @@ const Bundlers = {
   nest: NestBundler,
 };
 
-function Bundler(config: any): any {
-  return Bundlers[config.buildType as TBuildType](config);
+function Bundler(config: any, options?: any): any {
+  return Bundlers[config.buildType as TBuildType](config, options);
 }
 
 export default Bundler;

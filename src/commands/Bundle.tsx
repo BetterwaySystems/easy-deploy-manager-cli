@@ -23,13 +23,14 @@ const Bundle = (props: any) => {
   /**
    * output or o 옵션이 들어오는 경우 옵션 값을 우선함
    */
+  const pm2handler = new (PM2Handler as any)(config);
+  const ecosystemConfigLocation = pm2handler.generateEcoSystemConfig(config);
+
   config.output = props.output || props.o || defaultOutputPath;
 
-  /**
-   * pm2 ecosystem.config 생성 테스트용도
-   */
-  const pm2handler = new (PM2Handler as any)(config);
-  pm2handler.generateEcoSystemConfig(config);
+  const options = {
+    ecosystemConfigLocation,
+  };
 
   /**
    * build 결과가 저장 될 디렉토리가 없다면 생성
@@ -42,7 +43,7 @@ const Bundle = (props: any) => {
    * config.buildType에 따른 Builder And Bundler를 가져옴
    */
   const builder: IBuilder = Builder(config);
-  const bundler: IBundler = Bundler(config);
+  const bundler: IBundler = Bundler(config, options);
 
   async function execHandler() {
     try {
@@ -50,6 +51,10 @@ const Bundle = (props: any) => {
       await builder.exec();
       console.log("---------- build success ----------");
       console.log("---------- bundle start ----------");
+
+      /**
+       * pm2 ecosystem.config 생성
+       */
       await bundler.exec();
       console.log("---------- bundle success ----------");
     } catch (err) {
