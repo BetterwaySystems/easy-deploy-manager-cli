@@ -1,113 +1,106 @@
-import { Client, ClientErrorExtensions } from 'ssh2';
-import { parse } from 'node:path/posix';
-import { readFileSync } from 'node:fs';
-import { getConfig } from './common/parseJsonFile';
-import Log from './Log';
+import { Client, ClientErrorExtensions } from "ssh2";
+import { parse } from 'node:path/posix'
+import { readFileSync } from "node:fs";
+import { getConfig } from "./common/parseJsonFile";
+import Log from "./Log";
 
-const connectionPool: Partial<Record<string, RemoteServer>> = {};
+const connectionPool : Partial<Record<string, RemoteServer>> = {};
 const PM2_VERSION: string = '5.2.0';
 const COMMAND_NOT_FOUND_CODE = 127;
 const BACKUP_FOLDER = 'backup';
-const BUNDLE_FOLDER = 'bundle';
+const BUNDLE_FOLDER = 'bundle'
 
-function readyEventHandler(
-  conn: Client,
-  resolve: (value: IClient) => void,
-  reject: (reason?: any) => void,
-) {
-  return (err: Error & ClientErrorExtensions) => {
+function readyEventHandler(conn : Client, resolve : (value : IClient)=> void, reject : (reason? : any)=> void) {
+  return (err: Error & ClientErrorExtensions)=>{
     if (err) {
       return reject(err);
     }
-
+  
     conn.sftp((err, sftp) => {
       if (err) {
         return reject(err);
       }
-
+  
       const remoteClient: IClient = {
         connection: conn,
         sftp: sftp,
       };
-
+      
       resolve(remoteClient);
     });
-  };
+  }
 }
 
-function errorEventHandler(reject: (reason?: any) => void) {
-  return (err: Error) => {
+function errorEventHandler(reject : (reason? : any) => void) {
+  return (err: Error)=>{
     reject(err.message);
-  };
+  }
 }
 
 function getConnection(config: ISSHConfig) {
-  return new Promise<IClient>((resolve, reject) => {
+  
+  return new Promise<IClient>((resolve, reject)=>{
     const conn = new Client();
     conn
-      .once('ready', readyEventHandler(conn, resolve, reject))
-      .once('error', errorEventHandler(reject))
+      .once("ready", readyEventHandler(conn, resolve, reject))
+      .once("error", errorEventHandler(reject))
       .connect(config);
   });
+
 }
 
 class RemoteServer {
   _raw;
   name;
 
-  constructor(client: IClient, name: string) {
+  constructor(client : IClient, name: string){
     this._raw = client;
     this.name = name;
   }
 
-  exec(command: string, options?: IExecOptions) {
-    return new Promise((resolve, reject) => {
+  exec(command: string, options?: IExecOptions){
+    return new Promise((resolve, reject)=>{
       this._raw.connection.exec(command, function (err, stream) {
-        if (err) {
+        if(err) {
           reject(err);
         } else {
-          var context: any = { stdout: '', stderr: '' };
-          stream
-            .on('close', function (code: number, signal: any) {
-              context.code = code;
-              context.signal = signal;
-              if (code !== 0) {
-                reject({ code, stderr: context.stderr });
-              } else resolve(true);
-            })
-            .on('data', function (data: any) {
-              data = data.toString();
-              if (options?.onStdout) options.onStdout(data);
-              context.stdout += data;
-            })
-            .stderr.on('data', function (data: any) {
-              data = data.toString();
-              context.stderr += data;
-            });
+          var context : any = {stdout: "", stderr: ""};
+          stream.on('close', function(code : number, signal : any) {
+            context.code = code;
+            context.signal = signal;
+            if (code !== 0) { reject({ code, stderr: context.stderr }) }
+            else resolve(true);
+          }).on('data', function(data:any) {
+            data = data.toString();
+            if (options?.onStdout) options.onStdout(data);
+            context.stdout += data;
+          }).stderr.on('data', function(data:any) {
+            data = data.toString();
+            context.stderr += data;
+          });
         }
       });
     });
   }
 
-  exists(path: string) {
+  exists(path: string){
     return new Promise<Boolean>((resolve, reject) => {
-      let { dir, base } = parse(path);
 
-      this._raw.sftp.readdir(dir, (err: any, list: any) => {
+      let {dir, base} = parse(path);
+  
+      this._raw.sftp.readdir(dir, (err:any, list:any) => {
         if (err) {
           if (err.code === 2) {
             resolve(false);
           } else {
             reject(
-              new Error(
-                `Error listing ${dir}: code: ${err.code} ${err.message}`,
-              ),
+              new Error(`Error listing ${dir}: code: ${err.code} ${err.message}`)
             );
           }
         } else {
           let [type] = list
-            .filter((item: any) => item.filename === base)
-            .map((item: any) => item.longname.substr(0, 1));
+            .filter((item:any) => item.filename === base)
+            .map((item:any) => item.longname.substr(0, 1));
           if (type) {
             resolve(true);
           } else {
@@ -115,20 +108,20 @@ class RemoteServer {
           }
         }
       });
+  
     });
   }
 
   async mkdir(path: string, originPath?: string): Promise<Boolean> {
-    const haveDir = await this.exists(path);
-    if (haveDir) return true;
 
-    let doMkdir = (p: string) => {
+    const haveDir = await this.exists(path);
+    if(haveDir) return true;
+
+    let doMkdir = (p:string) => {
       return new Promise<Boolean>((resolve, reject) => {
         this._raw.sftp.mkdir(p, (err) => {
           if (err) {
-            reject(
-              new Error(`Failed to create directory ${p}: ${err.message}`),
-            );
+            reject(new Error(`Failed to create directory ${p}: ${err.message}`));
           }
           resolve(true);
         });
@@ -138,79 +131,79 @@ class RemoteServer {
     const { dir } = parse(path);
 
     const havePreviousDir = await this.exists(dir);
-    if (havePreviousDir) {
-      const result = await doMkdir(path);
+    if (havePreviousDir){
+      const result = await doMkdir(path)
       if (originPath) {
         if (path === originPath) return true;
         else return await this.mkdir(originPath);
-      }
+      };
       return result;
-    }
+    };
     return await this.mkdir(dir, originPath || path);
   }
 
-  putFile(path: string, dest: string, options?: any) {
-    return new Promise(async (resolve, reject) => {
+  putFile(path:string, dest:string, options?: any){
+    
+    return new Promise(async (resolve, reject)=>{
       let totalTransfered = 0;
-
-      function sendProgressInfo(_tt: any, chunk: any, total: any) {
+  
+      function sendProgressInfo(_tt : any, chunk : any, total : any) {
         totalTransfered += chunk;
-        let completedPercentage = (totalTransfered / total) * 100;
-        if (options?.onProgress) {
+        let completedPercentage = (totalTransfered/total) * 100;
+        if(options?.onProgress) {
           options.onProgress(completedPercentage, totalTransfered, total);
         }
       }
-
+  
       let fastPutOptions = {
-        step: sendProgressInfo,
+        step: sendProgressInfo
       };
-
-      let { dir } = parse(dest);
+  
+      let { dir } = parse(dest)
       await this.mkdir(dir);
-      this._raw.sftp.fastPut(path, dest, fastPutOptions, (err) => {
-        if (err) reject(err);
-        else resolve(true);
-      });
-    });
+      this._raw.sftp.fastPut(path, dest, fastPutOptions, (err)=>{
+        if (err) reject(err)
+        else resolve(true)
+      })
+  
+    })
   }
 
-  async extractTarBall(path: string, dest?: string) {
-    const { dir, base } = parse(path);
+  async extractTarBall(path:string, dest?:string){
+    const { dir, base } = parse(path)
 
     let command = `cd ${dir} && tar -xvf ${base}`;
 
-    if (dest) {
+    if (dest){
       await this.mkdir(dest);
       command += ` -C ${dest}`;
     }
 
     try {
-      return await this.exec(command);
-    } catch (err) {
-      throw err;
+      return await this.exec(command)
+    }catch (err){
+      throw err
     }
   }
 
-  async installNode() {
-    const { nodeVersion } = getConfig();
 
-    const exec = async (
-      command: string,
-      callback?: (content: string) => void,
-    ): Promise<boolean> => {
+  async installNode() {
+    const { nodeVersion } = getConfig()
+  
+    const exec = async (command: string, callback?: (content: string) => void): Promise<boolean> => {
       try {
         await this.exec(command, { onStdout: callback });
         return true;
       } catch (error) {
-        const err = error as ISSHExecError;
+        const err = error as ISSHExecError
         if (err.stderr) console.log(`\x1b[31m%s${err.stderr}\x1b[0m`);
         return false;
       }
     };
-
+  
     console.log('check nvm has installed');
     const nvmInstalled = await exec(`nvm -v`);
-
+  
     if (nvmInstalled) {
       console.log('nvm is already installed');
       const hasNodeVersion = await exec(`nvm ls ${nodeVersion}`);
@@ -228,13 +221,11 @@ class RemoteServer {
     let pm2Version, nodeVersion, uninstalledPM2;
 
     try {
-      await this.exec('pm2 --version', {
-        onStdout: (content: string) => {
-          pm2Version = content;
-        },
-      });
-    } catch (err) {
-      const error = err as { code: number; stderr: string };
+      await this.exec('pm2 --version', { onStdout: (content: string) => {
+        pm2Version = content;
+      }});
+    } catch(err) {
+      const error = err as {code: number, stderr: string}
       if (error.code === COMMAND_NOT_FOUND_CODE) uninstalledPM2 = true;
       else throw err;
     }
@@ -243,19 +234,17 @@ class RemoteServer {
 
     if (uninstalledPM2 || differentVersion) {
       try {
-        await this.exec('node --version', {
-          onStdout: (content: string) => {
-            if (content !== '\n') nodeVersion = content;
-          },
-        });
-      } catch (err) {
+        await this.exec('node --version', { onStdout: (content: string) => {
+          if (content !== '\n') nodeVersion = content;
+        }});
+      } catch(err) {
         throw err;
       }
 
       const installCommand = `npm install -g pm2@${PM2_VERSION} && sudo ln -s -f ~/.nvm/versions/node/${nodeVersion}/bin/pm2 /usr/local/bin`;
       try {
         return await this.exec(installCommand);
-      } catch (err) {
+      } catch(err) {
         throw err;
       }
     }
@@ -263,32 +252,32 @@ class RemoteServer {
     return true;
   }
 
-  close() {
-    return new Promise((resolve) => {
+  close(){
+    return new Promise((resolve)=>{
       this._raw.connection.end();
-      resolve(void 0);
+      resolve(void 0); 
     });
   }
 
   /**
    * Generate backup folder for rollback at any time
-   * @param {string} appName - is name for pm2 manage
-   * @param {string} dir - is root path of remote server
+   * @param {string} appName - is name for pm2 manage 
+   * @param {string} dir - is root path of remote server 
    */
   async backup(appName: string, dir: string) {
     let path = '';
     let command = '';
 
-    try {
+    try { 
       // Check if you already have a running deploy folder
       path = `${dir}/${appName}`;
       const hasBundle = await this.exists(path);
-      if (!hasBundle) return false;
+      if(!hasBundle) return false;
 
       // After checking if the backup folder exists, create it if it doesn't exist.
       path = `${dir}/${BACKUP_FOLDER}`;
-      const hasBackup = await this.exists(path);
-      if (!hasBackup) {
+      const hasBackup = await this.exists(path); 
+      if(!hasBackup) {
         command = `cd ${dir} && mkdir ${BACKUP_FOLDER}`;
         await this.exec(command);
       }
@@ -296,7 +285,7 @@ class RemoteServer {
       // Move the existing deploy folder to the backup folder
       command = `mv ${dir}/${appName}/* ${dir}/${BACKUP_FOLDER}`;
       return await this.exec(command);
-    } catch (err) {
+    } catch(err) {
       throw err;
     }
   }
@@ -310,39 +299,41 @@ class RemoteServer {
     const command = `cp -r ${dir}/${BACKUP_FOLDER}/node_modules ${dir}/${appName}`;
     try {
       return await this.exec(command);
-    } catch (err) {
+    } catch(err) {
       throw err;
     }
   }
 
   async revertApp(appName: string, dir: string, options?: IRevertAppOptions) {
+
     let log = new Log(appName);
 
-    let logger = (type: 'info' | 'warn' | 'error', msg: string) => {
-      if (options?.disableLog !== true) log[type](msg);
-
+    let logger = (type : 'info' | 'warn' | 'error', msg:string )=>{
+      if (options?.disableLog !== true ) log[type](msg)
+      
       if (options?.onStep?.constructor === Function) {
         options.onStep(msg);
       }
-    };
+    }
 
     try {
+      
       const appDir = `${dir}/${appName}`;
       const bundleDir = `${appDir}/${BUNDLE_FOLDER}`;
       const backupDir = `${appDir}/${BACKUP_FOLDER}`;
       const backupEcosystemPath = `${backupDir}/ecosystem.config.js`;
       const revertTempDir = `${appDir}/temp`;
-
+      
       // Check application directory
-      logger('info', `Check application`);
+      logger('info', `Check application`)
       await this.exists(appDir);
 
       // Check backup directory
-      logger('info', `Check backup`);
+      logger('info', `Check backup`)
       await this.exists(backupDir);
 
       // Check backup pm2 ecosystem file
-      logger('info', `Check previous ecosystem`);
+      logger('info', `Check previous ecosystem`)
       await this.exists(backupEcosystemPath);
 
       // Move current application to temp folder
@@ -351,7 +342,7 @@ class RemoteServer {
       await this.exec(command1);
 
       // Move backup to bundle folder
-      logger('info', `Copy backup to current application`);
+      logger('info', `Copy backup to current application`)
       let command2 = `cp -r ${backupDir} ${bundleDir}`;
       await this.exec(command2);
 
@@ -359,15 +350,12 @@ class RemoteServer {
       let command3 = `mv ${revertTempDir}/node_modules ${bundleDir}`;
       await this.exec(command3);
 
-      // npm install
+      // npm install 
       logger('info', `Packages install`);
       let command4 = `cd ${bundleDir} && npm install`;
-      await this.exec(command4, {
-        onStdout: (stdout) => {
-          if (options?.disableLog !== true)
-            console.log(`[ NPM ] : ${stdout.trim()}`);
-        },
-      });
+      await this.exec(command4, { onStdout : (stdout)=>{
+        if (options?.disableLog !== true) console.log(`[ NPM ] : ${stdout.trim()}`);
+      }});
 
       // Start previous application
       logger('info', `Start previous application`);
@@ -381,32 +369,36 @@ class RemoteServer {
 
       logger('info', `Revert Application Done!`);
       return true;
-    } catch (err) {
-      console.log('[][][][][[]][][][ 에러낫스마아어ㅓ');
+
+    } catch (err){
+      console.log('[][][][][[]][][][ 에러낫스마아어ㅓ')
       throw err;
     }
   }
 }
 
-async function getRemoteServer(config: ISSHConfig) {
+async function getRemoteServer(config : ISSHConfig){
+
   const uuid = config.alias || config.host;
   // Single Connection Pool
   if (connectionPool[uuid]) {
-    console.log('싱글톤 패턴 객체 돌려줌!');
+    console.log('싱글톤 패턴 객체 돌려줌!')
     return connectionPool[uuid] as RemoteServer;
   }
 
   try {
-    if (config.pemLocation) {
+
+    if (config.pemLocation){
       config.privateKey = readFileSync(config.pemLocation);
     }
 
     const client = await getConnection(config);
     connectionPool[uuid] = new RemoteServer(client, uuid);
     return connectionPool[uuid] as RemoteServer;
-  } catch (error) {
+  }catch (error){
     throw Error();
   }
+
 }
 
 export default getRemoteServer;
