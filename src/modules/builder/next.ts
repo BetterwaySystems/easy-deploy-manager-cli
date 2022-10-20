@@ -9,11 +9,13 @@ const NextBuilder = function (this: any, config: any = {}): any {
       const command = `
         cd ${appLocation} && 
         ${
-          ["npm,  pnpm"].includes(packageManager)
+          ["npm", "pnpm"].includes(packageManager)
             ? `${packageManager} run build`
             : `${packageManager} build`
         }
       `;
+
+      console.log("command", command);
 
       const process: any = childProcess.exec(command);
 
