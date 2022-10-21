@@ -218,11 +218,11 @@ class RemoteServer {
   }
 
   async installPM2() {
-    let pm2Version, nodeVersion, uninstalledPM2;
+    let pm2Version, nodeVersion, uninstalledPM2 = false;
 
     try {
       await this.exec('pm2 --version', { onStdout: (content: string) => {
-        pm2Version = content;
+        pm2Version = content.trim();
       }});
     } catch(err) {
       const error = err as ISSHExecError
