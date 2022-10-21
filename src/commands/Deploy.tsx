@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Text } from "ink";
 import fs from "fs";
+const BUNDLE_FOLDER = "bundle";
 
 import { getRemoteServer, PM2Handler } from "../modules";
 import Builder from "../modules/builder";
@@ -11,9 +12,9 @@ const Deploy = (props: any) => {
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [messageColor, setMessageColor] = useState<string>();
 
-  const defaultOutputPath = `${process.cwd()}/bundle`;
-
-  config.output = props.output || props.o || defaultOutputPath;
+  if (props.output || props.o) {
+    config.output = props.output || props.o;
+  }
 
   const pm2handler = new (PM2Handler as any)(config);
   const ecosystemConfigLocation = pm2handler.generateEcoSystemConfig(config);
@@ -22,8 +23,9 @@ const Deploy = (props: any) => {
     ecosystemConfigLocation,
   };
 
-  if (!fs.existsSync(defaultOutputPath)) {
-    fs.mkdirSync(defaultOutputPath);
+  if (!fs.existsSync(config.output)) {
+    fs.mkdirSync(config.output);
+    fs.mkdirSync(config.output + "/" + BUNDLE_FOLDER);
   }
 
   async function DeployModule() {
@@ -59,8 +61,8 @@ const Deploy = (props: any) => {
 
       setMessage("Process : Upload bundle");
       await remoteServer.putFile(
-        `${process.cwd()}/bundle.tar`,
-        appDir + ".tar",
+        `${config.output}/bundle.tar`,
+        appDir + ".tar"
       );
 
       setMessage("Process : Unzip bundle");
@@ -72,7 +74,7 @@ const Deploy = (props: any) => {
           ["npm", "pnpm"].includes(config.packageManager)
             ? `${config.packageManager} i --legacy-peer-deps`
             : `${config.packageManager}`
-        }`,
+        }`
       );
 
       setMessage("Process : Application start");

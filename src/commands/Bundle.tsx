@@ -6,6 +6,8 @@ import Builder from "../modules/builder/index";
 import PM2Handler from "../modules/PM2Handler";
 import { getConfig } from "../modules/common/parseJsonFile";
 
+const BUNDLE_FOLDER = "bundle";
+
 const Bundle = (props: any) => {
   // TODO 쓰기 및 참조 작업 전 항상 대상디렉토리가 존재하는지 확인 후 진행
   /**
@@ -32,6 +34,7 @@ const Bundle = (props: any) => {
    */
   if (!fs.existsSync(config.output)) {
     fs.mkdirSync(config.output);
+    fs.mkdirSync(config.output + "/" + BUNDLE_FOLDER);
   }
 
   /**
