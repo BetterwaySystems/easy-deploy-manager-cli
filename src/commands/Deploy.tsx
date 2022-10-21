@@ -9,8 +9,10 @@ import Bundler from "../modules/bundler";
 
 const Deploy = (props: any) => {
   const { config } = props;
-  const [message, setMessage] = useState<string | undefined>(undefined);
+  const [resultMsg, setResultMsg] = useState<string>();
+  const [processMsg, setProcessMsg] = useState<string>();
   const [messageColor, setMessageColor] = useState<string>();
+  const processMsgColor = "blue";
 
   if (props.output || props.o) {
     config.output = props.output || props.o;
@@ -39,54 +41,61 @@ const Deploy = (props: any) => {
     try {
       if (!remoteServer) {
         setMessageColor("red");
-        setMessage("Failed: Can't connect remote server.");
+        setResultMsg("Failed: Can't connect remote server.");
 
         return false;
       }
 
-      setMessageColor("blue");
-
-      setMessage("Process : Build start");
+      setProcessMsg("Process : Build start");
       await builder.exec();
 
-      setMessage("Process : Bundle start");
+      setProcessMsg("Process : Bundle start");
       await bundler.exec();
 
-      setMessage("Process : Node install check");
+      setProcessMsg("Process : Node install check");
       await remoteServer.installNode();
 
-      setMessage("Process : PM2 install check");
+      setProcessMsg("Process : PM2 install check");
       await remoteServer.installPM2();
 
-      setMessage("Process : Upload bundle");
+      setProcessMsg("Process : Generate backup");
+      await remoteServer.backup(`${appName}/bundle`, server.deploymentDir);
+
+      setProcessMsg("Process : Upload bundle");
       await remoteServer.putFile(
         `${config.output}/bundle.tar`,
-        appDir + ".tar"
+        `${appDir}.tar`,
       );
 
-      setMessage("Process : Unzip bundle");
-      await remoteServer.extractTarBall(appDir + ".tar");
+      setProcessMsg("Process : Unzip bundle");
+      await remoteServer.extractTarBall(`${appDir}.tar`);
 
-      setMessage("Process : node_modules install");
+      setProcessMsg("Process : Move node_modules from backup  ");
+      await remoteServer.useExistingNodeModules(
+        `${appName}/bundle`,
+        `${server.deploymentDir}`,
+      );
+
+      setProcessMsg("Process : Install package");
       await remoteServer.exec(
         `cd ${appDir} && ${
           ["npm", "pnpm"].includes(config.packageManager)
             ? `${config.packageManager} i --legacy-peer-deps`
             : `${config.packageManager}`
-        }`
+        }`,
       );
 
-      setMessage("Process : Application start");
+      setProcessMsg("Process : Application start");
       await remoteServer.startApp(appName, server.deploymentDir);
 
       setMessageColor("green");
-      setMessage(`Success: Deployed successfully on ${server.host}`);
+      setResultMsg(`Success: Deployed successfully on ${server.host}`);
       await remoteServer.close();
     } catch (e) {
       const err = e as ISSHExecError & Error;
-      const error = typeof err === 'object' ? err.stderr : err;
-      setMessageColor('red');
-      setMessage('Failed:\n' + error);
+      const error = typeof err === "object" ? err.stderr : err;
+      setMessageColor("red");
+      setResultMsg("Failed:\n" + error);
       await remoteServer.close();
     }
 
@@ -107,9 +116,10 @@ const Deploy = (props: any) => {
         <Text color={"blue"}>o</Text>
         <Text color={"#8b00ff"}>y</Text>
       </Box>
-      <Box>
-        <Text color={messageColor}>{message}</Text>
-      </Box>
+      {messageColor !== "green" && (
+        <Text color={processMsgColor}>{processMsg}</Text>
+      )}
+      <Text color={messageColor}>{resultMsg}</Text>
     </>
   );
 };
