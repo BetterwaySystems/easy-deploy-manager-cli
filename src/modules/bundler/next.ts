@@ -3,7 +3,6 @@ import appLocationDirectory from "../common/appLocationDirectory";
 const BUNDLE_FOLDER = "bundle";
 
 const NextBundler = function (this: any, config: any = {}, options: any) {
-  config.output = config.output + "/" + BUNDLE_FOLDER;
   const { appLocation, output } = config;
 
   function exec() {
@@ -20,15 +19,21 @@ const NextBundler = function (this: any, config: any = {}, options: any) {
         "pnpm-lock.yaml",
       ];
 
-      let command = `mv ${options.ecosystemConfigLocation} ${output}/ecosystem.config.js`;
+      let command = `mv ${options.ecosystemConfigLocation} ${
+        output + "/" + BUNDLE_FOLDER
+      }/ecosystem.config.js`;
       for (const directory of findFiles) {
         if (includeBundleTargetFileNames.includes(directory.name)) {
-          const appendCommand = ` && cp -r ${appLocation}/${directory.name} ${output}/${directory.name}`;
+          const appendCommand = ` && cp -r ${appLocation}/${directory.name} ${
+            output + "/" + BUNDLE_FOLDER
+          }/${directory.name}`;
           command += appendCommand;
         }
       }
 
-      const makeTar = ` && cd ${output} && cd .. && tar -cvf bundle.tar bundle`;
+      const makeTar = ` && cd ${
+        output + "/" + BUNDLE_FOLDER
+      } && cd .. && tar -cvf bundle.tar bundle`;
 
       command += makeTar;
 
