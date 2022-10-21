@@ -1,11 +1,10 @@
 export {};
 
 declare global {
-
-  type TInkComponentType = 'selectInput' | 'textInput';
-  type TOperatingSystem = 'ubuntu' | 'amazonlinux' | 'centos';
-  type TPM2ExecMode = 'fork' | 'cluster';
-  type TPackageManager = 'npm' | 'yarn' | 'pnpm';
+  type TInkComponentType = "selectInput" | "textInput";
+  type TOperatingSystem = "ubuntu" | "amazonlinux" | "centos";
+  type TPM2ExecMode = "fork" | "cluster";
+  type TPackageManager = "npm" | "yarn" | "pnpm";
 
   interface ISelectOption {
     label: string;
@@ -45,6 +44,7 @@ declare global {
     server: IDefaultDeployServerInfo;
     pm2: IDefaultDeployPM2Info;
     env: Record<string, any>;
+    output: string;
   }
 
   interface InitDefaultInputComponentProps {

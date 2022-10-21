@@ -15,8 +15,6 @@ const NextBuilder = function (this: any, config: any = {}): any {
         }
       `;
 
-      console.log("command", command);
-
       const process: any = childProcess.exec(command);
 
       process.stdout.on("data", function (data: any) {
