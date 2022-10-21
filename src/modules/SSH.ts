@@ -252,6 +252,20 @@ class RemoteServer {
     return true;
   }
 
+  async stopApp(appName: string, dir: string) {
+    try {
+      const appDir = `${dir}/${appName}`;
+      await this.exists(appDir);
+
+      const command = `pm2 stop ${appName}`;
+      await this.exec(command);
+
+      return true;
+    } catch(err) {
+      throw err;
+    }
+  }
+
   close(){
     return new Promise((resolve)=>{
       this._raw.connection.end();
@@ -299,6 +313,20 @@ class RemoteServer {
     const command = `cp -r ${dir}/${BACKUP_FOLDER}/node_modules ${dir}/${appName}`;
     try {
       return await this.exec(command);
+    } catch(err) {
+      throw err;
+    }
+  }
+
+  async startApp(appName: string, dir: string) {
+    try {
+      const appDir = `${dir}/${appName}/bundle`;
+      await this.exists(appDir);
+
+      const command = `cd ${appDir} && pm2 start ecosystem.config.js`;
+      await this.exec(command);
+
+      return true;
     } catch(err) {
       throw err;
     }
