@@ -8,7 +8,8 @@ const InitDescription = () => {
     🔆 This utility will make you through creating a \`easy-deploy.json\` file.
     🔥 It only covers the most common items, and tries to guess sensible default.
 
-    \`appName is essential\`, and the value you input is the default value.
+    \`appName is essential\`, and (server) is designed to enable multi instance.
+    The value you input is the default value.
   `;
 
   return (

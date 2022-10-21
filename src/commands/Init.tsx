@@ -187,10 +187,10 @@ const Init = () => {
   if (step > initSettingInfo.length - 1) {
     const initializeFileInfo = {
       ...defaultInitInfo,
-      server: {
+      server: [{
         ...defaultInitInfo.server,
         port: Number(defaultInitInfo.server.port),
-      },
+      }]
     };
 
     // create easy-deploy.json
@@ -203,16 +203,18 @@ const Init = () => {
       "packageManager": "${defaultInitInfo.packageManager}",
       "appName": "${defaultInitInfo.appName}",
       "nodeVersion": "${defaultInitInfo.nodeVersion}",
-      "server": {
-        "os": "${defaultInitInfo.server.os}"
-        "host": "${defaultInitInfo.server.host}",
-        "port": ${defaultInitInfo.server.port},
-        "username": "${defaultInitInfo.server.username}",
-        "password": "${defaultInitInfo.server.password}",
-        "deploymentDir": "${defaultInitInfo.server.deploymentDir}",
-        "pemLocation": "${defaultInitInfo.server.pemLocation}",
-        "alias": "${defaultInitInfo.server.alias}"
-      },
+      "server": [
+        {
+          "os": "${defaultInitInfo.server.os}"
+          "host": "${defaultInitInfo.server.host}",
+          "port": ${defaultInitInfo.server.port},
+          "username": "${defaultInitInfo.server.username}",
+          "password": "${defaultInitInfo.server.password}",
+          "deploymentDir": "${defaultInitInfo.server.deploymentDir}",
+          "pemLocation": "${defaultInitInfo.server.pemLocation}",
+          "alias": "${defaultInitInfo.server.alias}"
+        }
+      ],
       "pm2": {
         "exec_mode": "${defaultInitInfo.pm2.exec_mode}",
         "instance": "${defaultInitInfo.pm2.instance}"
