@@ -32,8 +32,8 @@ const Bundle = (props: any) => {
   /**
    * build & bundle 결과가 저장 될 디렉토리가 없다면 생성
    */
-  if (!fs.existsSync(config.output)) {
-    fs.mkdirSync(config.output);
+
+  if (!fs.existsSync(config.output + "/" + BUNDLE_FOLDER)) {
     fs.mkdirSync(config.output + "/" + BUNDLE_FOLDER);
   }
 

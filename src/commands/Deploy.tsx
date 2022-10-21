@@ -23,8 +23,7 @@ const Deploy = (props: any) => {
     ecosystemConfigLocation,
   };
 
-  if (!fs.existsSync(config.output)) {
-    fs.mkdirSync(config.output);
+  if (!fs.existsSync(config.output + "/" + BUNDLE_FOLDER)) {
     fs.mkdirSync(config.output + "/" + BUNDLE_FOLDER);
   }
 
