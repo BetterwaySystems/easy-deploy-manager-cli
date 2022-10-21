@@ -292,10 +292,8 @@ class RemoteServer {
       // After checking if the backup folder exists, create it if it doesn't exist.
       path = `${dir}/${BACKUP_FOLDER}`;
       const hasBackup = await this.exists(path); 
-      if(!hasBackup) {
-        command = `cd ${dir} && mkdir ${BACKUP_FOLDER}`;
-        await this.exec(command);
-      }
+      command = hasBackup ? `cd ${dir}/backup && rm -r *` : `cd ${dir} && mkdir ${BACKUP_FOLDER}`;
+      await this.exec(command);
 
       // Move the existing deploy folder to the backup folder
       command = `mv ${dir}/${appName}/* ${dir}/${BACKUP_FOLDER}`;
@@ -310,11 +308,17 @@ class RemoteServer {
    * @param {string} appName - is name for pm2 manage
    * @param {string} dir - is root path of remote server
    */
-  async useExistingNodeModules(appName: string, dir: string) {
-    const command = `cp -r ${dir}/${BACKUP_FOLDER}/node_modules ${dir}/${appName}`;
+   async useExistingNodeModules(appName: string, dir: string) {
     try {
-      return await this.exec(command);
-    } catch(err) {
+      const path = `${dir}/${BACKUP_FOLDER}`;
+      const hasBackup = await this.exists(path);
+      if (hasBackup) {
+        const command = `cp -r ${dir}/${BACKUP_FOLDER}/node_modules ${dir}/${appName}`;
+        return await this.exec(command);
+      } else {
+        return false;
+      }
+    } catch (err) {
       throw err;
     }
   }
