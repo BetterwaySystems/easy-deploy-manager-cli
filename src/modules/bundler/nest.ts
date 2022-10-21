@@ -1,6 +1,5 @@
-import { ChildProcess, spawn, exec as childExec } from 'child_process';
+import { ChildProcess, exec as childExec } from 'child_process';
 import { readdirSync, existsSync, mkdirSync } from 'fs';
-import os from 'os';
 import ts from 'typescript';
 
 const NestBundler = function (this: any, config: any): any {
@@ -63,21 +62,24 @@ const NestBundler = function (this: any, config: any): any {
       }
   }
     mkdir(`../${outDir}`);
-    const buildChild: ChildProcess =
-    childExec(
-      `
-      cp -rf ${outDir} ../${outDir} && 
-      ${packageManager} ../${outDir} && 
-      tar -cvf ../Bundle_Nest.tar -C ../${outDir} . && 
-      rm -rf ../${outDir}
-      `
-      );
-      buildChild.on('close', () => {
-      console.log('finished bundling, please check your desktop');
+    return new Promise((resolve: any, reject: any) => {
+      const buildChild: ChildProcess =
+      childExec(
+        `
+        cp -rf ${outDir} ../${outDir} && 
+        ${packageManager} ../${outDir} && 
+        tar -cvf ../Bundle_Nest.tar -C ../${outDir} . && 
+        rm -rf ../${outDir}
+        `
+        );
+        buildChild.on('close', () => {
+          console.log('finished bundling, please check your desktop');
+          resolve(true);
+        })
+        buildChild.on('error', (err) => {
+          reject("nest bundle failed" + err);
       })
-      buildChild.on('error', (err) => {
-      console.log('error has occurred!!!', err);
-    })
+    });
   }
   return { exec };
 };
