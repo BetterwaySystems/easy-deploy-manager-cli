@@ -84,7 +84,7 @@ const initSettingInfo: Array<IInitSettingForComponent> = [
     type: "textInput",
     target: "output",
     label: "output",
-    defaultValue: `${process.cwd()}/bundle`,
+    defaultValue: `${process.cwd()}`,
     rangeNum: 3,
   },
   {
