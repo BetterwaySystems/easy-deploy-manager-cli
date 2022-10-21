@@ -34,7 +34,7 @@ const Bundle = (props: any) => {
    */
 
   if (!fs.existsSync(config.output + "/" + BUNDLE_FOLDER)) {
-    fs.mkdirSync(config.output + "/" + BUNDLE_FOLDER);
+    fs.mkdirSync(config.output + "/" + BUNDLE_FOLDER, { recursive: true });
   }
 
   /**
