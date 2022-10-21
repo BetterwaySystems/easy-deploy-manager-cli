@@ -318,6 +318,20 @@ class RemoteServer {
     }
   }
 
+  async startApp(appName: string, dir: string) {
+    try {
+      const appDir = `${dir}/${appName}/bundle`;
+      await this.exists(appDir);
+
+      const command = `cd ${appDir} && pm2 start ecosystem.config.js`;
+      await this.exec(command);
+
+      return true;
+    } catch(err) {
+      throw err;
+    }
+  }
+
   async revertApp(appName: string, dir: string, options?: IRevertAppOptions) {
 
     let log = new Log(appName);
