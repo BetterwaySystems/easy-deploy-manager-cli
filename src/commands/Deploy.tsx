@@ -83,8 +83,10 @@ const Deploy = (props: any) => {
       setMessage(`Success: Deployed successfully on ${server.host}`);
       await remoteServer.close();
     } catch (e) {
-      setMessageColor("red");
-      setMessage("Failed:\n" + e);
+      const err = e as ISSHExecError & Error;
+      const error = typeof err === 'object' ? err.stderr : err;
+      setMessageColor('red');
+      setMessage('Failed:\n' + error);
       await remoteServer.close();
     }
 
