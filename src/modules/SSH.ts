@@ -252,6 +252,20 @@ class RemoteServer {
     return true;
   }
 
+  async stopApp(appName: string, dir: string) {
+    try {
+      const appDir = `${dir}/${appName}`;
+      await this.exists(appDir);
+
+      const command = `pm2 stop ${appName}`;
+      await this.exec(command);
+
+      return true;
+    } catch(err) {
+      throw err;
+    }
+  }
+
   close(){
     return new Promise((resolve)=>{
       this._raw.connection.end();
