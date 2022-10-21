@@ -188,7 +188,7 @@ class RemoteServer {
 
 
   async installNode() {
-    const { nodeVersion } = getConfig()
+    const { nodeVersion } = getConfig();
   
     const exec = async (command: string, callback?: (content: string) => void): Promise<boolean> => {
       try {
@@ -201,20 +201,21 @@ class RemoteServer {
       }
     };
   
+    let isSuccess = false;
+    const setDefaultNodeVersion = `nvm alias default ${nodeVersion}`;
+
     console.log('check nvm has installed');
     const nvmInstalled = await exec(`nvm -v`);
-  
+
     if (nvmInstalled) {
       console.log('nvm is already installed');
-      const hasNodeVersion = await exec(`nvm ls ${nodeVersion}`);
-
-      if (hasNodeVersion) await exec(`nvm use ${nodeVersion}`, console.log);
-      else await exec(`nvm install ${nodeVersion}`, console.log);
+      isSuccess = await exec(`nvm install ${nodeVersion}`, console.log);
     } else {
       console.log('nvm is not yet installed, starting nvm installing...');
       const installNVM = `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && source $HOME/.nvm/nvm.sh && nvm install ${nodeVersion}`;
-      await exec(installNVM, console.log);
+      isSuccess = await exec(installNVM, console.log);
     }
+    if (isSuccess) await exec(setDefaultNodeVersion);
   }
 
   async installPM2() {
