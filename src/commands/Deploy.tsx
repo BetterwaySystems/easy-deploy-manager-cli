@@ -29,11 +29,11 @@ const Deploy = (props: any) => {
   async function DeployModule() {
     const { appName, server } = config;
 
-    const appDir = `${server.deploymentDir}/${appName}/bundle`;
-
     const builder: IBuilder = Builder(config);
     const bundler: IBundler = Bundler(config, options);
     const remoteServer = await getRemoteServer(server);
+
+    const appDir = `${server.deploymentDir}/${appName}/bundle`;
 
     try {
       if (!remoteServer) {
@@ -43,25 +43,30 @@ const Deploy = (props: any) => {
         return false;
       }
 
+      setMessageColor("blue");
+
+      setMessage("Process : Build start");
       await builder.exec();
+
+      setMessage("Process : Bundle start");
       await bundler.exec();
 
-      console.log("\n ----------- installNode-----------");
+      setMessage("Process : Node install check");
       await remoteServer.installNode();
 
-      console.log("\n----------- installPM2-----------");
+      setMessage("Process : PM2 install check");
       await remoteServer.installPM2();
 
-      console.log("\n----------- putFile -----------");
+      setMessage("Process : Upload bundle");
       await remoteServer.putFile(
         `${process.cwd()}/bundle.tar`,
         appDir + ".tar",
       );
 
-      console.log("\n----------- extractTarBall -----------");
+      setMessage("Process : Unzip bundle");
       await remoteServer.extractTarBall(appDir + ".tar");
 
-      console.log("\n----------- node install -----------");
+      setMessage("Process : node_modules install");
       await remoteServer.exec(
         `cd ${appDir} && ${
           ["npm", "pnpm"].includes(config.packageManager)
@@ -70,8 +75,8 @@ const Deploy = (props: any) => {
         }`,
       );
 
-      console.log("\n----------- start -----------");
-      await remoteServer.exec(`cd ${appDir} && pm2 start ecosystem.config.js`);
+      setMessage("Process : Application start");
+      await remoteServer.startApp(appName, server.deploymentDir);
 
       setMessageColor("green");
       setMessage(`Success: Deployed successfully on ${server.host}`);
