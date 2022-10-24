@@ -1,5 +1,6 @@
 import { ChildProcess, exec as childExec } from 'child_process';
-import { readdirSync, existsSync, mkdirSync } from 'fs';
+import { readdirSync } from 'fs';
+import appLocationDirectory from "../common/appLocationDirectory";
 import ts from 'typescript';
 
 const NestBundler = function (this: any, config: any): any {
@@ -7,6 +8,7 @@ const NestBundler = function (this: any, config: any): any {
   const PACKAGE_NPM: string = 'cp package.json package-lock.json';
   const PACKAGE_YARN: string = 'cp package.json yarn.lock';
   const PACKAGE_PNPM: string = 'cp package.json pnpm-lock.yaml';
+  const OUT_PUT_DIR: string = config.output + '/bundle'
 
   const findManager = (): string => {
     if (config.packageManager) {
@@ -42,9 +44,8 @@ const NestBundler = function (this: any, config: any): any {
 
   function exec() {
     const packageManager = findManager();
-    const currentDir = process.cwd();
     const configFileName: string|undefined = ts.findConfigFile(
-      currentDir,
+      config.appLocation,
       ts.sys.fileExists,
       "tsconfig.json"
     );
@@ -55,21 +56,14 @@ const NestBundler = function (this: any, config: any): any {
       "./"
     );
     const outDir = compilerOptions.options.outDir || 'dist';
-    function mkdir( dirPath:string ) {
-      const isExists = existsSync( dirPath );
-      if( !isExists ) {
-          mkdirSync( dirPath, { recursive: true } );
-      }
-  }
-    mkdir(`../${outDir}`);
     return new Promise((resolve: any, reject: any) => {
       const buildChild: ChildProcess =
       childExec(
-        `
-        cp -rf ${outDir} ../${outDir} && 
-        ${packageManager} ../${outDir} && 
-        tar -cvf ../Bundle_Nest.tar -C ../${outDir} . && 
-        rm -rf ../${outDir}
+        `cd ${config.appLocation} && 
+        cp -rf ${outDir} ${OUT_PUT_DIR} && 
+        ${packageManager} ${OUT_PUT_DIR} && 
+        cd ${OUT_PUT_DIR} &&
+        tar -cvf bundle.tar .
         `
         );
         buildChild.on('close', () => {
