@@ -5,7 +5,7 @@ import { getConfig } from "./common/parseJsonFile";
 import Log from "./Log";
 
 const connectionPool : Partial<Record<string, RemoteServer>> = {};
-const PM2_VERSION: string = '5.2.0';
+const PM2_VERSION: string = '5.1.0';
 const COMMAND_NOT_FOUND_CODE = 127;
 const BACKUP_FOLDER = 'backup';
 const BUNDLE_FOLDER = 'bundle'
@@ -56,6 +56,23 @@ class RemoteServer {
   constructor(client : IClient, name: string){
     this._raw = client;
     this.name = name;
+  }
+  
+  async getLog(appName: string) {
+    return new Promise((resolve, reject) => {
+      this._raw.connection.shell((err, stream) => {
+        if (err) reject(err);
+
+        stream.setEncoding('utf8');
+        stream.write(`pm2 log ${appName} --nostream\nexit\n`);
+
+        stream.on('data', (data: any) => {
+          stream.stdout += data;
+        }).on('end', () => {
+          resolve(stream.stdout)          ;
+        })
+      })
+    });
   }
 
   exec(command: string, options?: IExecOptions){
@@ -308,7 +325,7 @@ class RemoteServer {
    * @param {string} appName - is name for pm2 manage
    * @param {string} dir - is root path of remote server
    */
-   async useExistingNodeModules(appName: string, dir: string) {
+  async useExistingNodeModules(appName: string, dir: string) {
     try {
       const path = `${dir}/${BACKUP_FOLDER}`;
       const hasBackup = await this.exists(path);
