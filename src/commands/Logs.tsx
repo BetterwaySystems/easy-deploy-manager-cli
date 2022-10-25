@@ -10,8 +10,8 @@ const Logs = ({ config } : ICommandProps)=>{
     const remoteServer = await getRemoteServer(server);
 
     try {
-      const logs = await remoteServer.getLog(appName);
-      console.log(logs);
+      const result: ISSHExecResult = await remoteServer.getLog(appName);
+      console.log(result.stdout);
     } catch(err) {
       console.log(err);
     }
