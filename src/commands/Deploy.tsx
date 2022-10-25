@@ -60,7 +60,7 @@ const Deploy = (props: any) => {
 
       setProcessMsg('Process : Generate backup');
       const hasBackup = await remoteServer.backup(
-        `${appName}/bundle`,
+        appName,
         server.deploymentDir,
       );
 
@@ -76,8 +76,8 @@ const Deploy = (props: any) => {
       if (hasBackup) {
         setProcessMsg('Process : Move node_modules from backup');
         await remoteServer.useExistingNodeModules(
-          `${appName}/bundle`,
-          `${server.deploymentDir}`,
+          appName,
+          `${server.deploymentDir}`
         );
       }
 
