@@ -62,8 +62,8 @@ const NestBundler = function (this: any, config: any): any {
         `cd ${config.appLocation} && 
         cp -rf ${outDir} ${OUT_PUT_DIR} && 
         ${packageManager} ${OUT_PUT_DIR} && 
-        cd ${OUT_PUT_DIR} &&
-        tar -cvf bundle.tar .
+        cd ${config.output} &&
+        tar -cvf bundle.tar bundle
         `
         );
         buildChild.on('close', () => {
