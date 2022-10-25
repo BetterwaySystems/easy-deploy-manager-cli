@@ -58,8 +58,11 @@ const Deploy = (props: any) => {
       setProcessMsg("Process : PM2 install check");
       await remoteServer.installPM2();
 
-      setProcessMsg("Process : Generate backup");
-      await remoteServer.backup(`${appName}/bundle`, server.deploymentDir);
+      setProcessMsg('Process : Generate backup');
+      const hasBackup = await remoteServer.backup(
+        `${appName}/bundle`,
+        server.deploymentDir,
+      );
 
       setProcessMsg("Process : Upload bundle");
       await remoteServer.putFile(
@@ -70,11 +73,13 @@ const Deploy = (props: any) => {
       setProcessMsg("Process : Unzip bundle");
       await remoteServer.extractTarBall(`${appDir}.tar`);
 
-      setProcessMsg("Process : Move node_modules from backup  ");
-      await remoteServer.useExistingNodeModules(
-        `${appName}/bundle`,
-        `${server.deploymentDir}`,
-      );
+      if (hasBackup) {
+        setProcessMsg('Process : Move node_modules from backup');
+        await remoteServer.useExistingNodeModules(
+          `${appName}/bundle`,
+          `${server.deploymentDir}`,
+        );
+      }
 
       setProcessMsg("Process : Install package");
       await remoteServer.exec(
