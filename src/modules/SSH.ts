@@ -292,11 +292,11 @@ class RemoteServer {
       // After checking if the backup folder exists, create it if it doesn't exist.
       path = `${dir}/${BACKUP_FOLDER}`;
       const hasBackup = await this.exists(path); 
-      command = hasBackup ? `cd ${dir}/backup && rm -r *` : `cd ${dir} && mkdir ${BACKUP_FOLDER}`;
+      command = hasBackup ? `cd ${dir}/${BACKUP_FOLDER} && rm -rf ${appName}` : `cd ${dir} && mkdir ${BACKUP_FOLDER} && cd ${BACKUP_FOLDER} && mkdir ${appName}`;
       await this.exec(command);
 
       // Move the existing deploy folder to the backup folder
-      command = `mv ${dir}/${appName}/* ${dir}/${BACKUP_FOLDER}`;
+      command = `mv ${dir}/${appName}/* ${dir}/${BACKUP_FOLDER}/${appName}`;
       return await this.exec(command);
     } catch(err) {
       throw err;
@@ -313,7 +313,7 @@ class RemoteServer {
       const path = `${dir}/${BACKUP_FOLDER}`;
       const hasBackup = await this.exists(path);
       if (hasBackup) {
-        const command = `cp -r ${dir}/${BACKUP_FOLDER}/node_modules ${dir}/${appName}`;
+        const command = `cp -r ${dir}/${BACKUP_FOLDER}/${appName}/node_modules ${dir}/${appName}`;
         return await this.exec(command);
       } else {
         return false;
