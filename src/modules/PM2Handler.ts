@@ -18,7 +18,7 @@ PM2Handler.prototype.generateEcoSystemConfig = function () {
   // TODO: package.json에서 start명령어가 없는 경우 defaultApplicationStartScriptCommands를 참조해서
   let app: any = {
     name: this._config.appName,
-    script: "npx next start",
+    script: `npx ${this._config.packageManger} start`,
     env: this._config.env,
   };
 
