@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
 
 const PM2Handler = function (this: any, config: any) {
   this._config = config;
@@ -7,15 +7,9 @@ const PM2Handler = function (this: any, config: any) {
 };
 
 PM2Handler.prototype.generateEcoSystemConfig = function () {
-  const pwd = process.env["PWD"] || process.cwd();
-  const fileName = "ecosystem.config.js";
+  const pwd = process.env['PWD'] || process.cwd();
+  const fileName = 'ecosystem.config.js';
 
-  const defaultApplicationStartScriptCommands = {
-    next: "npx next start",
-    nest: "nest start",
-  };
-
-  // TODO: package.json에서 start명령어가 없는 경우 defaultApplicationStartScriptCommands를 참조해서
   let app: any = {
     name: this._config.appName,
     script: `npx ${this._config.buildType} start`,
@@ -34,8 +28,12 @@ PM2Handler.prototype.generateEcoSystemConfig = function () {
 
   fs.writeFileSync(path.join(pwd, fileName), dt);
 
-  const ecosystemConfigLocation = path.join(pwd, fileName);
-  return ecosystemConfigLocation;
+  const ecosystemFileInfo = {
+    pwd,
+    fileName,
+  };
+
+  return ecosystemFileInfo;
 };
 
 export default PM2Handler;
