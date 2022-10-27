@@ -51,10 +51,7 @@ const Deploy = (props: any) => {
       await remoteServer.installPM2();
 
       setProcessMsg('Process : Generate Temporary backup folder');
-      const hasBundle = await remoteServer.moveTempBackup(
-        appName,
-        server.deploymentDir,
-      );
+      const hasBundle = await remoteServer.moveTempBackup(appName, server.deploymentDir);
 
       setProcessMsg('Process : Upload bundle');
       await remoteServer.putFile(`${output}/bundle.tar`, `${appDir}.tar`);
@@ -64,24 +61,15 @@ const Deploy = (props: any) => {
       }
 
       setProcessMsg('Process : Unzip bundle');
-      await remoteServer.extractTarBall(`${appDir}.tar`);
+      await remoteServer.extractTarBall(`${appDir}.tar`, `${appDir}`);
 
       if (hasBundle) {
         setProcessMsg('Process : Generate backup');
-        await remoteServer.backup(
-          appName,
-          `${server.deploymentDir}`
-        );
+        await remoteServer.backup(appName, `${server.deploymentDir}`);
       }
 
       setProcessMsg('Process : Install package');
-      await remoteServer.exec(
-        `cd ${appDir} && ${
-          ['npm', 'pnpm'].includes(config.packageManager)
-            ? `${config.packageManager} i --legacy-peer-deps`
-            : `${config.packageManager}`
-        }`
-      );
+      await remoteServer.exec(`cd ${appDir} && npm install`);
 
       setProcessMsg('Process : Application start');
       await remoteServer.startApp(appName, server.deploymentDir);
