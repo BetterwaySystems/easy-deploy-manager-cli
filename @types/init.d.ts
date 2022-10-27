@@ -1,10 +1,9 @@
 export {};
 
 declare global {
-  type TInkComponentType = "selectInput" | "textInput";
-  type TOperatingSystem = "ubuntu" | "amazonlinux" | "centos";
-  type TPM2ExecMode = "fork" | "cluster";
-  type TPackageManager = "npm" | "yarn" | "pnpm";
+  type TInkComponentType = 'selectInput' | 'textInput';
+  type TOperatingSystem = 'ubuntu' | 'amazonlinux' | 'centos';
+  type TPM2ExecMode = 'fork' | 'cluster';
 
   interface ISelectOption {
     label: string;
@@ -38,7 +37,6 @@ declare global {
 
   interface IDefaultInitInfo {
     buildType: TBuildType | string;
-    packageManager: TPackageManager | string;
     appName: string;
     nodeVersion: string;
     server: IDefaultDeployServerInfo;
