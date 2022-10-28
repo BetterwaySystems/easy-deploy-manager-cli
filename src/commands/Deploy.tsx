@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
+import fs from 'fs';
 
 import { getRemoteServer, PM2Handler } from '../modules';
 import Builder from '../modules/builder';
@@ -32,6 +33,10 @@ const Deploy = (props: any) => {
   const isSkipBuild = options.skipBuild;
 
   if (config.bundleFilePath) {
+    if (!fs.existsSync(config.bundleFilePath)) {
+      return <ErrorText errorMessage="'bundleFilePath' does not exist." />;
+    }
+
     output = config.bundleFilePath;
     useDefaultOutput = true;
   }
