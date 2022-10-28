@@ -10,15 +10,15 @@ const Bundlers = {
 };
 
 function Bundler(props: any): any {
-  const config = getConfig();
+  const { config, options } = props;
 
   const pm2handler = new (PM2Handler as any)(config);
   const writedEcosystemLocationInfo: { pwd: string; fileName: string } =
     pm2handler.generateEcoSystemConfig(config);
 
-  const output = props.output || props.o || config.output || process.cwd();
+  const output = options.output || options.o || config.output || process.cwd();
 
-  const options = {
+  const bundleOptions = {
     writedEcosystemLocationInfo,
     output,
   };
@@ -27,7 +27,7 @@ function Bundler(props: any): any {
     fs.mkdirSync(output, { recursive: true });
   }
 
-  return Bundlers[config.buildType as TBuildType](config, options);
+  return Bundlers[config.buildType as TBuildType](config, bundleOptions);
 }
 
 export default Bundler;
