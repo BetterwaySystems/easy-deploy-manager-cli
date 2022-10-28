@@ -6,19 +6,40 @@ import Builder from '../modules/builder';
 import Bundler from '../modules/bundler';
 import { exec } from 'child_process';
 
+const ErrorText = ({ errorMessage }: any) => {
+  return (
+    <Box flexDirection="column">
+      <Text color="red">ERROR: {errorMessage}</Text>
+    </Box>
+  );
+};
+
 const Deploy = (props: any) => {
-  const { config } = props;
+  const { config, options } = props;
   const [resultMsg, setResultMsg] = useState<string>();
   const [processMsg, setProcessMsg] = useState<string>();
   const [messageColor, setMessageColor] = useState<string>();
   const processMsgColor = 'blue';
 
-  let output = props.output || props.o || config.output;
+  let output = options.output || options.o || config.output;
   let useDefaultOutput = false;
 
   if (!output) {
     output = process.cwd();
     useDefaultOutput = true;
+  }
+
+  const isSkipBuild = options.skipBuild;
+
+  if (config.bundleFilePath) {
+    output = config.bundleFilePath;
+    useDefaultOutput = true;
+  }
+
+  if (isSkipBuild && !config.bundleFilePath) {
+    return (
+      <ErrorText errorMessage="If use 'skipBuild' option then 'bundleFilePath' is required in easy-deploy.json" />
+    );
   }
 
   async function DeployModule() {
@@ -38,11 +59,15 @@ const Deploy = (props: any) => {
         return false;
       }
 
-      setProcessMsg('Process : Build start');
-      await builder.exec();
+      if (isSkipBuild) {
+        console.log('skip build');
+      } else {
+        setProcessMsg('Process : Build start');
+        await builder.exec();
 
-      setProcessMsg('Process : Bundle start');
-      await bundler.exec();
+        setProcessMsg('Process : Bundle start');
+        await bundler.exec();
+      }
 
       setProcessMsg('Process : Node install check');
       await remoteServer.installNode();

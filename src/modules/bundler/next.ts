@@ -2,9 +2,9 @@ import childProcess from 'child_process';
 import appLocationDirectory from '../common/appLocationDirectory';
 const BUNDLE_TAR_NAME = 'bundle.tar';
 
-const NextBundler = function (this: any, config: any = {}, options: any) {
+const NextBundler = function (this: any, config: any = {}, bundleOptions: any) {
   const { appLocation } = config;
-  const { writedEcosystemLocationInfo, output } = options;
+  const { writedEcosystemLocationInfo, output } = bundleOptions;
 
   function exec() {
     return new Promise((resolve: any, reject: any) => {
