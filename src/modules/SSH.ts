@@ -422,6 +422,25 @@ class RemoteServer {
       throw err;
     }
   }
+
+  async getLog(appName: string): Promise<{stdout: string, stderr: string}> {
+    return new Promise((resolve, reject) => {
+      this._raw.connection.exec(`pm2 log ${appName} --nostream`, {pty: true}, (err, stream) => {
+        if (err) reject(err);
+        else {
+          let context = {stdout: "", stderr: ""}
+          stream.setEncoding('utf8');
+          stream.on('data' , (data: any) => {
+            context.stdout += data;
+          }).stderr.on('data', (data: any) => {
+            context.stderr += data;
+          }).on('end', () => {
+            resolve(context);
+          })
+        }
+      })
+    });
+  }
 }
 
 async function getRemoteServer(config: ISSHConfig) {
