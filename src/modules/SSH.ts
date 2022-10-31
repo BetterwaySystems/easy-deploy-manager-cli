@@ -338,13 +338,16 @@ class RemoteServer {
     }
   }
 
-  async startApp(appName: string, dir: string) {
-    try {
-      const appDir = `${dir}/${appName}/bundle`;
-      await this.exists(appDir);
+  async startApp(appName: string, dir: string, options?: IStartAppOptions) {
+    const appDir = `${dir}/${appName}/bundle`;
+    let command = `cd ${appDir} && `;
+    command += options?.refreshConfig 
+              ? `pm2 stop ${appName} && pm2 delete ${appName} && pwd && pm2 start ecosystem.config.js`
+              : `pm2 start ecosystem.config.js` ;
 
-      const command = `cd ${appDir} && pm2 start ecosystem.config.js`;
-      await this.exec(command);
+    try {
+      await this.exists(appDir);
+      await this.exec(command, {onStdout: (c) => console.log(c)});
 
       return true;
     } catch (err) {
