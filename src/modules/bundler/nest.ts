@@ -3,13 +3,14 @@ import { readdirSync } from 'fs';
 import appLocationDirectory from "../common/appLocationDirectory";
 import ts from 'typescript';
 
-const NestBundler = function (this: any, config: any): any {
+const NestBundler = function (this: any, config: any, bundleOptions:Record<string, any>): any {
   console.log("config", config);
   const PACKAGE_NPM: string = 'cp package.json package-lock.json';
   const PACKAGE_YARN: string = 'cp package.json yarn.lock';
   const PACKAGE_PNPM: string = 'cp package.json pnpm-lock.yaml';
-  const OUT_PUT_DIR: string = config.output + '/bundle'
-
+  const OUT_PUT_DIR: string = config.output;
+  const BUNDLE_FILE: string = 'bundle.tar';
+  const { writedEcosystemLocationInfo, output } = bundleOptions;
   const findManager = (): string => {
     if (config.packageManager) {
       switch (config.packageManager) {
@@ -30,13 +31,13 @@ const NestBundler = function (this: any, config: any): any {
       } else {
         if (files.findIndex((filename) => filename === 'yarn.lock') > -1) {
           console.log(`PackageManager is YARN, start to collect dependencies files`);
-          return 'cp package.json yarn.lock';
+          return 'package.json yarn.lock';
         } else if (files.findIndex((filename) => filename === 'pnpm-lock.yaml') > -1) {
           console.log(`PackageManager is PNPM, start to collect dependencies files`);
-          return 'cp package.json pnpm-lock.yaml';
+          return 'package.json pnpm-lock.yaml';
         } else {
           console.log(`PackageManager is NPM, start to collect dependencies files`);
-          return 'cp package.json package-lock.json';
+          return 'package.json package-lock.json';
         }
       }
     }
@@ -56,18 +57,23 @@ const NestBundler = function (this: any, config: any): any {
       "./"
     );
     const outDir = compilerOptions.options.outDir || 'dist';
+    const TARGET_COMMAND: string = `
+    cd ${config.appLocation} && 
+    tar cvf ${OUT_PUT_DIR}/${BUNDLE_FILE} ${outDir} ${packageManager} 
+    `;
+    
+    const EXTRA_LOCATION_COMMAND: string = ` 
+    cd ${writedEcosystemLocationInfo.pwd} &&
+    tar rvf ${output}/${BUNDLE_FILE} ${writedEcosystemLocationInfo.fileName}
+    rm -rf ${writedEcosystemLocationInfo.pwd}/${writedEcosystemLocationInfo.fileName}
+    `;
     return new Promise((resolve: any, reject: any) => {
       const buildChild: ChildProcess =
       childExec(
-        `cd ${config.appLocation} && 
-        cp -rf ${outDir} ${OUT_PUT_DIR} && 
-        ${packageManager} ${OUT_PUT_DIR} && 
-        cd ${config.output} &&
-        tar -cvf bundle.tar bundle
-        `
+        TARGET_COMMAND + EXTRA_LOCATION_COMMAND
         );
         buildChild.on('close', () => {
-          console.log('finished bundling, please check your desktop');
+          console.log('finished bundling, please check your bundleFile');
           resolve(true);
         })
         buildChild.on('error', (err) => {
