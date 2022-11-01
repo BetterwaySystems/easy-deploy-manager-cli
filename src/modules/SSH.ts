@@ -347,11 +347,42 @@ class RemoteServer {
 
     try {
       await this.exists(appDir);
-      await this.exec(command, {onStdout: (c) => console.log(c)});
+      await this.exec(command);
 
       return true;
     } catch (err) {
       throw err;
+    }
+  }
+
+  async saveProcesss() {
+    try {
+      await this.exec('pm2 save');
+    } catch(err) {
+      throw err;
+    }
+  }
+
+  async startUp(username: string) {
+    let message: Array<string> = [];
+    try {
+      await this.exec('pm2 startup', { onStdout: (content) => {
+        message.push(content);
+      }});
+    } catch(err) {
+      const error = err as ISSHExecError;
+
+      if (error.code === 1 && error.stderr === '') {
+        let setStartupCommand: string = message.pop()!;
+        try {
+          await this.exec(setStartupCommand);
+          await this.exec(`sudo systemctl start pm2-${username}`)
+        } catch(err) {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
     }
   }
 
