@@ -342,7 +342,7 @@ class RemoteServer {
     const appDir = `${dir}/${appName}/bundle`;
     let command = `cd ${appDir} && `;
     command += options?.refreshConfig 
-              ? `pm2 stop ${appName} && pm2 delete ${appName} && pwd && pm2 start ecosystem.config.js`
+              ? `pm2 stop ${appName} && pm2 delete ${appName} && pm2 start ecosystem.config.js`
               : `pm2 start ecosystem.config.js` ;
 
     try {
