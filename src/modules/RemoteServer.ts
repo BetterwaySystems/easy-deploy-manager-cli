@@ -355,7 +355,7 @@ class RemoteServer {
     }
   }
 
-  async saveProcesss() {
+  async saveProcess() {
     try {
       await this.exec('pm2 save');
     } catch(err) {
@@ -363,20 +363,19 @@ class RemoteServer {
     }
   }
 
-  async startUp(username: string) {
-    let message: Array<string> = [];
+  async startUp() {
+    let messages: Array<string> = [];
     try {
       await this.exec('pm2 startup', { onStdout: (content) => {
-        message.push(content);
+        messages.push(content);
       }});
     } catch(err) {
       const error = err as ISSHExecError;
 
       if (error.code === 1 && error.stderr === '') {
-        let setStartupCommand: string = message.pop()!;
+        let setStartupCommand: string = messages.pop()!;
         try {
           await this.exec(setStartupCommand);
-          await this.exec(`sudo systemctl start pm2-${username}`)
         } catch(err) {
           throw err;
         }
