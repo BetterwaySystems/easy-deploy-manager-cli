@@ -5,6 +5,7 @@ import fs from 'fs';
 import { getRemoteServer, PM2Handler } from '../modules';
 import Builder from '../modules/builder';
 import Bundler from '../modules/bundler';
+import CommandBuild from '../modules/common/commandBuild';
 import { exec } from 'child_process';
 
 const ErrorText = ({ errorMessage }: any) => {
@@ -48,7 +49,7 @@ const Deploy = (props: any) => {
   }
 
   async function DeployModule() {
-    const { appName, server } = config;
+    const { appName, server, nodeVersion } = config;
 
     const builder: IBuilder = Builder();
     const bundler: IBundler = Bundler(props);
@@ -99,7 +100,14 @@ const Deploy = (props: any) => {
       }
 
       setProcessMsg('Process : Install package');
-      await remoteServer.exec(`cd ${appDir} && npm install`);
+      const commandBuild = new CommandBuild();
+      const changeDirectory = `cd ${appDir}`;
+      const changeNodeVersion = `nvm use ${nodeVersion}`;
+      const installPackage = `npm install`;
+
+      commandBuild.push(changeDirectory, changeNodeVersion, installPackage);
+      const command = commandBuild.getCmd({ operator: '&&' });
+      await remoteServer.exec(command);
 
       setProcessMsg('Process : Application start');
       await remoteServer.startApp(appName, server.deploymentDir);
