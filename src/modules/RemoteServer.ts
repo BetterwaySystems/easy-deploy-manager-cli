@@ -2,7 +2,7 @@ import { Client, ClientErrorExtensions } from 'ssh2';
 import { parse } from 'node:path/posix';
 import { readFileSync } from 'node:fs';
 import { getConfig } from './common/parseJsonFile';
-import CommandBuild from './common/commandBuild';
+import CommandBuilder from './common/commandBuilder';
 import Log from './Log';
 
 const connectionPool: Partial<Record<string, RemoteServer>> = {};
@@ -53,12 +53,11 @@ function getConnection(config: ISSHConfig) {
   });
 }
 
-class RemoteServer extends CommandBuild {
+class RemoteServer {
   _raw;
   name;
 
   constructor(client: IClient, name: string) {
-    super();
     this._raw = client;
     this.name = name;
   }
@@ -194,18 +193,19 @@ class RemoteServer extends CommandBuild {
     const installNode = `nvm install ${nodeVersion}`;
 
     try {
-      await this.exec(`nvm -v`);
-      try {
-        await this.exec(installNode);
-      } catch (err) {
-        throw err;
-      }
+      await this.exec(installNode);
     } catch (err) {
       try {
-        this.command.push(installNVM, runNVM, installNode);
-        const command = this.getCmd({ operator: '&&' });
 
-        await this.exec(command);
+        const command = new CommandBuilder();
+        command
+          .add(installNVM)
+          .add(runNVM)
+          .add(installNode)
+        
+        const cmd = command.getCommand()
+
+        await this.exec(cmd);
       } catch (err) {
         throw err;
       }
@@ -231,15 +231,18 @@ class RemoteServer extends CommandBuild {
     const differentVersion = !uninstalledPM2 && pm2Version !== PM2_VERSION;
 
     if (uninstalledPM2 || differentVersion) {
-      const changeNodeVersion = `nvm use ${nodeVersion}`;
       const installPM2 = `npm install -g pm2@${PM2_VERSION}`;
       const linkPM2 = `sudo ln -s -f ~/.nvm/versions/node/${nodeVersion}/bin/pm2 /usr/local/bin`;
 
-      this.command.push(changeNodeVersion, installPM2, linkPM2);
+      const command = new CommandBuilder({nodeVersion});
+      command
+        .add(installPM2)
+        .add(linkPM2)
 
-      const command = this.getCmd({ operator: '&&' });
+      const cmd = command.getCommand();
+
       try {
-        return await this.exec(command);
+        return await this.exec(cmd);
       } catch (err) {
         throw err;
       }
