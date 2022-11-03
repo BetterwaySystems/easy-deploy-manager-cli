@@ -62,4 +62,8 @@ declare global {
     disableLog? : boolean
     onStep? : (message : string)=> void
   }
+
+  interface IStartAppOptions {
+    refreshConfig?: boolean;
+  }
 }

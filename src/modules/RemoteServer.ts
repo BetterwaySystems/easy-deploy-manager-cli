@@ -326,17 +326,50 @@ class RemoteServer extends CommandBuild {
     }
   }
 
-  async startApp(appName: string, dir: string) {
-    try {
-      const appDir = `${dir}/${appName}/bundle`;
-      await this.exists(appDir);
+  async startApp(appName: string, dir: string, options?: IStartAppOptions) {
+    const appDir = `${dir}/${appName}/bundle`;
+    let command = `cd ${appDir} && `;
+    command += options?.refreshConfig 
+              ? `pm2 stop ${appName} && pm2 delete ${appName} && pm2 start ecosystem.config.js`
+              : `pm2 start ecosystem.config.js` ;
 
-      const command = `cd ${appDir} && pm2 start ecosystem.config.js`;
+    try {
+      await this.exists(appDir);
       await this.exec(command);
 
       return true;
     } catch (err) {
       throw err;
+    }
+  }
+
+  async saveProcess() {
+    try {
+      await this.exec('pm2 save');
+    } catch(err) {
+      throw err;
+    }
+  }
+
+  async startUp() {
+    let messages: Array<string> = [];
+    try {
+      await this.exec('pm2 startup', { onStdout: (content) => {
+        messages.push(content);
+      }});
+    } catch(err) {
+      const error = err as ISSHExecError;
+
+      if (error.code === 1 && error.stderr === '') {
+        let setStartupCommand: string = messages.pop()!;
+        try {
+          await this.exec(setStartupCommand);
+        } catch(err) {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
     }
   }
 
@@ -409,6 +442,25 @@ class RemoteServer extends CommandBuild {
       console.log('[][][][][[]][][][ 에러낫스마아어ㅓ');
       throw err;
     }
+  }
+
+  async getLog(appName: string): Promise<{stdout: string, stderr: string}> {
+    return new Promise((resolve, reject) => {
+      this._raw.connection.exec(`pm2 log ${appName} --nostream`, {pty: true}, (err, stream) => {
+        if (err) reject(err);
+        else {
+          let context = {stdout: "", stderr: ""}
+          stream.setEncoding('utf8');
+          stream.on('data' , (data: any) => {
+            context.stdout += data;
+          }).stderr.on('data', (data: any) => {
+            context.stderr += data;
+          }).on('end', () => {
+            resolve(context);
+          })
+        }
+      })
+    });
   }
 }
 

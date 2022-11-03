@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import fs from 'fs';
 import { Text } from 'ink';
 import Bundler from '../modules/bundler/index';
 import Builder from '../modules/builder/index';
