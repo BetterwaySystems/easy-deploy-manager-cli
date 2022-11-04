@@ -331,10 +331,16 @@ class RemoteServer {
 
   async startApp(appName: string, dir: string, options?: IStartAppOptions) {
     const appDir = `${dir}/${appName}/bundle`;
-    let command = `cd ${appDir} && `;
-    command += options?.refreshConfig 
-              ? `pm2 stop ${appName} && pm2 delete ${appName} && pm2 start ecosystem.config.js`
-              : `pm2 start ecosystem.config.js` ;
+    const startCommand = 'pm2 start ecosystem.config.js';
+    const commandBuilder = new CommandBuilder();
+
+    commandBuilder.add(`cd ${appDir}`);
+    if (options?.refreshConfig) {
+      commandBuilder.add(`pm2 stop ${appName}`).add(`pm2 delete ${appName}`);
+    }
+    commandBuilder.add(startCommand);
+
+    const command = commandBuilder.getCommand();
 
     try {
       await this.exists(appDir);
