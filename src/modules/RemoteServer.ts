@@ -277,19 +277,24 @@ class RemoteServer {
    * @param {string} appName - is name for pm2 manage
    * @param {string} dir - is root path of remote server
    */
-  async moveTempBackup(appName: string, dir: string) {
-    let path = '';
-    let command = '';
+   async moveTempBackup(appName: string, dir: string) {
+    const deployPath = `${dir}/${appName}`;
+    const generateTempBackup = `mkdir ${dir}/tempBackup`;
+    const moveExistBundle = `mv ${dir}/${appName}/bundle/* ${dir}/tempBackup`;
 
     try {
       // Check if you already have a running deploy folder
-      path = `${dir}/${appName}`;
-      const hasBundle = await this.exists(path);
+      const hasBundle = await this.exists(deployPath);
       if (!hasBundle) return false;
 
       // Move the backup file to a temporary folder
-      command = `mkdir ${dir}/tempBackup && mv ${dir}/${appName}/bundle/* ${dir}/tempBackup`;
-      return await this.exec(command);
+      const command = new CommandBuilder();
+      command
+        .add(generateTempBackup)
+        .add(moveExistBundle);
+
+      const cmd = command.getCommand();
+      return await this.exec(cmd);
     } catch (err) {
       throw err;
     }
@@ -301,29 +306,38 @@ class RemoteServer {
    * @param {string} dir - is root path of remote server
    */
   async backup(appName: string, dir: string) {
-    let path = '';
-    let command = '';
+    const backupPath =  `${dir}/${appName}/${BACKUP_FOLDER}`;
+    const changeDeployDirectory = `cd ${dir}/${appName}`;
+    const removeExistBackup = `rm -rf ${BACKUP_FOLDER}`;
+    const generateNewBackup = `mkdir ${dir}/${appName}/${BACKUP_FOLDER}`;
+    const moveTempBackup = `mv ${dir}/tempBackup/* ${dir}/${appName}/${BACKUP_FOLDER}`;
+    const moveNodeModules = `mv ${dir}/${appName}/${BACKUP_FOLDER}/node_modules ${dir}/${appName}/bundle`;
+    const removeTempBackup = `rm -rf ${dir}/tempBackup`
 
     try {
+      const command = new CommandBuilder();
+
       // Check if there is a backup folder in the application
-      path = `${dir}/${appName}/${BACKUP_FOLDER}`;
-      const hasBackup = await this.exists(path);
+      const hasBackup = await this.exists(backupPath);
       if (hasBackup) {
-        command = `cd ${dir}/${appName} && rm -rf ${BACKUP_FOLDER}`;
-        await this.exec(command);
+        command
+          .add(changeDeployDirectory)
+          .add(removeExistBackup);
       }
 
       // Move from temporary folder to backup folder in application
-      command = `mkdir ${dir}/${appName}/${BACKUP_FOLDER} && mv ${dir}/tempBackup/* ${dir}/${appName}/${BACKUP_FOLDER}`;
-      await this.exec(command);
+      command
+        .add(generateNewBackup)
+        .add(moveTempBackup);
 
       // Move node_modules
-      command = `mv ${dir}/${appName}/${BACKUP_FOLDER}/node_modules ${dir}/${appName}/bundle`;
-      await this.exec(command);
+      command.add(moveNodeModules);
 
       // Delete temporary backup folder
-      command = `rm -rf ${dir}/tempBackup`;
-      await this.exec(command);
+      command.add(removeTempBackup);
+
+      const cmd = command.getCommand();
+      await this.exec(cmd);
     } catch (err) {
       throw err;
     }
