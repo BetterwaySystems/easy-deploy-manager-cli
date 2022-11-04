@@ -2,6 +2,7 @@ import { Client, ClientErrorExtensions } from 'ssh2';
 import { parse } from 'node:path/posix';
 import { readFileSync } from 'node:fs';
 import { getConfig } from './common/parseJsonFile';
+import CommandBuilder from './common/commandBuilder';
 import Log from './Log';
 
 const connectionPool: Partial<Record<string, RemoteServer>> = {};
@@ -9,6 +10,7 @@ const PM2_VERSION: string = '5.2.0';
 const COMMAND_NOT_FOUND_CODE = 127;
 const BACKUP_FOLDER = 'backup';
 const BUNDLE_FOLDER = 'bundle';
+const { nodeVersion } = getConfig();
 
 function readyEventHandler(
   conn: Client,
@@ -186,42 +188,32 @@ class RemoteServer {
   }
 
   async installNode() {
-    const { nodeVersion } = getConfig();
+    const installNVM = `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash`;
+    const runNVM = `source $HOME/.nvm/nvm.sh`;
+    const installNode = `nvm install ${nodeVersion}`;
 
-    const exec = async (
-      command: string,
-      callback?: (content: string) => void
-    ): Promise<boolean> => {
+    try {
+      await this.exec(installNode);
+    } catch (err) {
       try {
-        await this.exec(command, { onStdout: callback });
-        return true;
-      } catch (error) {
-        const err = error as ISSHExecError;
-        if (err.stderr) console.log(`\x1b[31m%s${err.stderr}\x1b[0m`);
-        return false;
+
+        const command = new CommandBuilder();
+        command
+          .add(installNVM)
+          .add(runNVM)
+          .add(installNode)
+        
+        const cmd = command.getCommand()
+
+        await this.exec(cmd);
+      } catch (err) {
+        throw err;
       }
-    };
-
-    let isSuccess = false;
-    const setDefaultNodeVersion = `nvm alias default ${nodeVersion}`;
-
-    console.log('check nvm has installed');
-    const nvmInstalled = await exec(`nvm -v`);
-
-    if (nvmInstalled) {
-      console.log('nvm is already installed');
-      isSuccess = await exec(`nvm install ${nodeVersion}`, console.log);
-    } else {
-      console.log('nvm is not yet installed, starting nvm installing...');
-      const installNVM = `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash && source $HOME/.nvm/nvm.sh && nvm install ${nodeVersion}`;
-      isSuccess = await exec(installNVM, console.log);
     }
-    if (isSuccess) await exec(setDefaultNodeVersion);
   }
 
   async installPM2() {
     let pm2Version,
-      nodeVersion,
       uninstalledPM2 = false;
 
     try {
@@ -239,19 +231,18 @@ class RemoteServer {
     const differentVersion = !uninstalledPM2 && pm2Version !== PM2_VERSION;
 
     if (uninstalledPM2 || differentVersion) {
-      try {
-        await this.exec('node --version', {
-          onStdout: (content: string) => {
-            if (content !== '\n') nodeVersion = content;
-          },
-        });
-      } catch (err) {
-        throw err;
-      }
+      const installPM2 = `npm install -g pm2@${PM2_VERSION}`;
+      const linkPM2 = `sudo ln -s -f ~/.nvm/versions/node/${nodeVersion}/bin/pm2 /usr/local/bin`;
 
-      const installCommand = `npm install -g pm2@${PM2_VERSION} && sudo ln -s -f ~/.nvm/versions/node/${nodeVersion}/bin/pm2 /usr/local/bin`;
+      const command = new CommandBuilder({nodeVersion});
+      command
+        .add(installPM2)
+        .add(linkPM2)
+
+      const cmd = command.getCommand();
+
       try {
-        return await this.exec(installCommand);
+        return await this.exec(cmd);
       } catch (err) {
         throw err;
       }
