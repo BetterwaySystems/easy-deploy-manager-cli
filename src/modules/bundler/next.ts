@@ -1,5 +1,6 @@
 import childProcess from 'child_process';
 import appLocationDirectory from '../common/appLocationDirectory';
+import CommandBuilder from '../common/commandBuilder';
 const BUNDLE_TAR_NAME = 'bundle.tar';
 
 const NextBundler = function (this: any, config: any = {}, bundleOptions: any) {
@@ -25,20 +26,23 @@ const NextBundler = function (this: any, config: any = {}, bundleOptions: any) {
           existBundleTargetFileNames.push(appDirectory.name);
       }
 
-      const commandFromAppLocation: string = `
-        cd ${appLocation} && 
-        tar cvf ${output}/${BUNDLE_TAR_NAME} ${existBundleTargetFileNames.join(' ')} &&
-      `;
+      const changeDirAppLocation = `cd ${appLocation}`;
+      const appBundle = `tar cvf ${output}/${BUNDLE_TAR_NAME} ${existBundleTargetFileNames.join(' ')}`;
+      const changeDirEcosystemFile = `cd ${writedEcosystemLocationInfo.pwd}`;
+      const includeEcosystemConfig = `tar rvf ${output}/${BUNDLE_TAR_NAME} ${writedEcosystemLocationInfo.fileName}`;
+      const removeEcosystemConfigFile = `rm -rf ${writedEcosystemLocationInfo.pwd}/${writedEcosystemLocationInfo.fileName}`;
 
-      const commandFromExternalLocation: string = `
-        cd ${writedEcosystemLocationInfo.pwd} &&
-        tar rvf ${output}/${BUNDLE_TAR_NAME} ${writedEcosystemLocationInfo.fileName}
-        rm -rf ${writedEcosystemLocationInfo.pwd}/${writedEcosystemLocationInfo.fileName}
-      `;
+      const command = new CommandBuilder();
+      command
+        .add(changeDirAppLocation)
+        .add(appBundle)
+        .add(changeDirEcosystemFile)
+        .add(includeEcosystemConfig)
+        .add(removeEcosystemConfigFile);
 
-      const command: string = commandFromAppLocation + commandFromExternalLocation;
+      const cmd = command.getCommand();
 
-      const process: any = childProcess.exec(command);
+      const process: any = childProcess.exec(cmd);
 
       process.stdout.on('data', function (data: any) {
         if (data) console.log(data);

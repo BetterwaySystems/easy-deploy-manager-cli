@@ -1,12 +1,18 @@
 import childProcess from 'child_process';
+import CommandBuilder from '../common/commandBuilder';
 
 const NextBuilder = function (this: any, config: any = {}): any {
   const { appLocation } = config;
 
   function exec() {
     return new Promise((resolve: any, reject: any) => {
-      const command = `cd ${appLocation} && npx next build`;
-      const process: any = childProcess.exec(command);
+      const appBuild = `cd ${appLocation} && npx next build`;
+      const command = new CommandBuilder();
+      command.add(appBuild);
+
+      const cmd = command.getCommand();
+
+      const process: any = childProcess.exec(cmd);
 
       process.stdout.on('data', function (data: any) {
         console.log(data);
