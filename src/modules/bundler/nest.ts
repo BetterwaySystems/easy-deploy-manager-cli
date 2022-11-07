@@ -38,7 +38,7 @@ const NestBundler = function (this: any, config: any, bundleOptions:Record<strin
           return 'package.json pnpm-lock.yaml';
         } else {
           console.log(`PackageManager is NPM, start to collect dependencies files`);
-          return 'package.json package-lock.json';
+          return 'package.json package-lock.json tsconfig.build.json';
         }
       }
     }
