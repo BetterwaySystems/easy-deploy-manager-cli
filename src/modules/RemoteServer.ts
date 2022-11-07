@@ -279,6 +279,7 @@ class RemoteServer {
    */
    async moveTempBackup(appName: string, dir: string) {
     const deployPath = `${dir}/${appName}`;
+    const deleteTempBackup = `rm -rf ${dir}/tempBackup`;
     const generateTempBackup = `mkdir ${dir}/tempBackup`;
     const moveExistBundle = `mv ${dir}/${appName}/bundle/* ${dir}/tempBackup`;
 
@@ -290,6 +291,7 @@ class RemoteServer {
       // Move the backup file to a temporary folder
       const command = new CommandBuilder();
       command
+        .add(deleteTempBackup)
         .add(generateTempBackup)
         .add(moveExistBundle);
 
