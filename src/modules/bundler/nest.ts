@@ -2,14 +2,15 @@ import { ChildProcess, exec as childExec } from 'child_process';
 import { readdirSync } from 'fs';
 import appLocationDirectory from "../common/appLocationDirectory";
 import ts from 'typescript';
+import CommandBuilder from '../common/commandBuilder';
 
 const NestBundler = function (this: any, config: any, bundleOptions:Record<string, any>): any {
-  console.log("config", config);
   const PACKAGE_NPM: string = 'cp package.json package-lock.json';
   const PACKAGE_YARN: string = 'cp package.json yarn.lock';
   const PACKAGE_PNPM: string = 'cp package.json pnpm-lock.yaml';
   const OUT_PUT_DIR: string = config.output;
   const BUNDLE_FILE: string = 'bundle.tar';
+  const Command = new CommandBuilder();
   const { writedEcosystemLocationInfo, output } = bundleOptions;
   const findManager = (): string => {
     if (config.packageManager) {
@@ -24,7 +25,7 @@ const NestBundler = function (this: any, config: any, bundleOptions:Record<strin
           return PACKAGE_NPM;
       }
     } else {
-      const files = readdirSync(process.cwd());
+      const files = readdirSync(config.appLocation);
       if (files === undefined) {
         console.log(`cannot find PakageManager, Assumed to be npm`);
         return PACKAGE_NPM;
@@ -57,21 +58,21 @@ const NestBundler = function (this: any, config: any, bundleOptions:Record<strin
       "./"
     );
     const outDir = compilerOptions.options.outDir || 'dist';
-    const TARGET_COMMAND: string = `
-    cd ${config.appLocation} && 
-    tar cvf ${OUT_PUT_DIR}/${BUNDLE_FILE} ${outDir} ${packageManager} 
-    `;
+    const moveLocalCommand = `cd ${config.appLocation}`
+    const tarCommand = `tar cvf ${OUT_PUT_DIR}/${BUNDLE_FILE} ${outDir} ${packageManager} `;
+    const moveExternalCommand = `cd ${writedEcosystemLocationInfo.pwd}`;
+    const removeTarCommand = `tar rvf ${output}/${BUNDLE_FILE} ${writedEcosystemLocationInfo.fileName}`;
+    const removeEcoCommand = `rm -rf ${writedEcosystemLocationInfo.pwd}/${writedEcosystemLocationInfo.fileName}`;
+    Command
+      .add(moveLocalCommand)
+      .add(tarCommand)
+      .add(moveExternalCommand)
+      .add(removeTarCommand)
+      .add(removeEcoCommand);
+    const initCmd = Command.getCommand();
     
-    const EXTRA_LOCATION_COMMAND: string = ` 
-    cd ${writedEcosystemLocationInfo.pwd} &&
-    tar rvf ${output}/${BUNDLE_FILE} ${writedEcosystemLocationInfo.fileName}
-    rm -rf ${writedEcosystemLocationInfo.pwd}/${writedEcosystemLocationInfo.fileName}
-    `;
     return new Promise((resolve: any, reject: any) => {
-      const buildChild: ChildProcess =
-      childExec(
-        TARGET_COMMAND + EXTRA_LOCATION_COMMAND
-        );
+      const buildChild: ChildProcess = childExec(initCmd);
         buildChild.on('close', () => {
           console.log('finished bundling, please check your bundleFile');
           resolve(true);
