@@ -39,7 +39,7 @@ const Deploy = (props: any) => {
     }
 
     output = config.bundleFilePath;
-    useDefaultOutput = true;
+    useDefaultOutput = false;
   }
 
   if (isSkipBuild && !config.bundleFilePath) {
@@ -65,15 +65,15 @@ const Deploy = (props: any) => {
         return false;
       }
 
-      if (isSkipBuild) {
+      if (isSkipBuild || config.bundleFilePath) {
         console.log('skip build');
       } else {
         setProcessMsg('Process : Build start');
         await builder.exec();
-
-        setProcessMsg('Process : Bundle start');
-        await bundler.exec();
       }
+
+      setProcessMsg('Process : Bundle start');
+      await bundler.exec();
 
       setProcessMsg('Process : Node install check');
       await remoteServer.installNode();
