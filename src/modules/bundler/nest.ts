@@ -32,10 +32,10 @@ const NestBundler = function (this: any, config: any, bundleOptions:Record<strin
       } else {
         if (files.findIndex((filename) => filename === 'yarn.lock') > -1) {
           console.log(`PackageManager is YARN, start to collect dependencies files`);
-          return 'package.json yarn.lock';
+          return 'package.json yarn.lock tsconfig.build.json';
         } else if (files.findIndex((filename) => filename === 'pnpm-lock.yaml') > -1) {
           console.log(`PackageManager is PNPM, start to collect dependencies files`);
-          return 'package.json pnpm-lock.yaml';
+          return 'package.json pnpm-lock.yaml tsconfig.build.json';
         } else {
           console.log(`PackageManager is NPM, start to collect dependencies files`);
           return 'package.json package-lock.json tsconfig.build.json';
