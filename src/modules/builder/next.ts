@@ -1,5 +1,6 @@
 import childProcess from 'child_process';
 import CommandBuilder from '../common/commandBuilder';
+import fs from 'fs';
 
 const NextBuilder = function (this: any, config: any = {}): any {
   const { appLocation } = config;
@@ -9,6 +10,12 @@ const NextBuilder = function (this: any, config: any = {}): any {
       const appBuild = `cd ${appLocation} && npx next build`;
       const command = new CommandBuilder();
       command.add(appBuild);
+
+      const existPackageLockFile = fs.existsSync(`${appLocation}/package-lock.json`);
+      if(!existPackageLockFile) {
+        const addLockFile = `cd ${appLocation} && npm install --package-lock-only`;
+        command.add(addLockFile);
+      }
 
       const cmd = command.getCommand();
 
