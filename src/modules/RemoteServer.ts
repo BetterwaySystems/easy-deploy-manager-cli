@@ -10,7 +10,6 @@ const PM2_VERSION: string = '5.2.0';
 const COMMAND_NOT_FOUND_CODE = 127;
 const BACKUP_FOLDER = 'backup';
 const BUNDLE_FOLDER = 'bundle';
-const { nodeVersion } = getConfig();
 
 function readyEventHandler(
   conn: Client,
@@ -188,6 +187,7 @@ class RemoteServer {
   }
 
   async installNode() {
+    const { nodeVersion } = getConfig();
     const installNVM = `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash`;
     const runNVM = `source $HOME/.nvm/nvm.sh`;
     const installNode = `nvm install ${nodeVersion}`;
@@ -230,6 +230,7 @@ class RemoteServer {
 
     const differentVersion = !uninstalledPM2 && pm2Version !== PM2_VERSION;
 
+    const { nodeVersion } = getConfig();
     if (uninstalledPM2 || differentVersion) {
       const installPM2 = `npm install -g pm2@${PM2_VERSION}`;
       const linkPM2 = `sudo ln -s -f ~/.nvm/versions/node/${nodeVersion}/bin/pm2 /usr/local/bin`;
